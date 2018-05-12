@@ -1,6 +1,9 @@
+var gameWidth = 1200;
+
+
 export default {
-  gameWidth: 760,
-  gameHeight: 700,
+  gameWidth: gameWidth,
+  gameHeight: gameWidth * (3/4),
   localStorageName: 'phaseres6webpack',
   webfonts: ['Bangers']
 }

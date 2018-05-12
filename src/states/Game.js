@@ -8,7 +8,17 @@ export default class extends Phaser.State {
 
   create() {
     // Cursors & movement control
-    this.cursor = game.input.keyboard.createCursorKeys();
+
+    // p1 keys
+    this.p1Controls = game.input.keyboard.createCursorKeys();
+
+    // p2 keys
+    this.p2Controls = {
+      up: game.input.keyboard.addKey(Phaser.Keyboard.W),
+      down: game.input.keyboard.addKey(Phaser.Keyboard.S),
+      left: game.input.keyboard.addKey(Phaser.Keyboard.A),
+      right: game.input.keyboard.addKey(Phaser.Keyboard.D),
+    };
 
     game.physics.startSystem(Phaser.Physics.ARCADE);
 
@@ -22,40 +32,45 @@ export default class extends Phaser.State {
       smoothed: false
     })
 
+    //this.bg = game.add.group();
+    this.walls = game.add.group();
+    this.coins = game.add.group();
+
     banner.padding.set(10, 16)
     banner.anchor.setTo(0.5)
-    
-    this.mushroom = new Mushroom({
-      game: this.game,
-      x: this.world.centerX,
-      y: this.world.centerY,
-      asset: 'mushroom'
-    })
-
-    console.log(this.mushroom);
-
-
-    this.game.add.existing(this.mushroom)
-    
-    this.mushroom.body.gravity.y = 200;
-    game.world.setBounds(0, 0, 1920, 700);
-    game.camera.follow(this.mushroom);
-
-    this.walls = game.add.group();
 
     // Design the level. x = wall, o = coin, ! = lava.
     var level = [
-        'xxxxxxxxxxxxxxxxxxxxxx',
-        'x         !          x',        
-        'x         !          x',
-        'x                 o  x',
-        'x         o          x',
-        'x            x       x',
-        'x     x     x  x     x',       
-        'x         x          x',
-        'x        x           x',
-        'x     o   !    x     x',
-        'xxxxxxxxxxxxxxxxxxxxxx',
+        'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
+        'x                                  x',        
+        'x   c                c           c x',        
+        'x                                c x',        
+        'x                 x      x       c x',        
+        'x     x                           cx',        
+        'x                                  x',        
+        'x        xxx     x                 x',        
+        'x  x             x           x x   x',        
+        'x                                  x',        
+        'xxxxxxxxx      c     x    c        x',        
+        'x          x xxx               x   x',        
+        'x                        x    x    x',        
+        'x              xxx           x     x',        
+        'x    c                             x',        
+        'x                    x             x',        
+        'x   x  x         x                 x',        
+        'x   x      x xx       xx x x       x',        
+        'x   xx                   c   c     x',        
+        'x                                  x',        
+        'x     xxxxx  x x                   x',        
+        'x                  x               x',
+        'x                               c  x',
+        'x                       x          x',
+        'x                          x       x',
+        'x       x        x  x  c  x  x     x',       
+        'x   c                              x',
+        'x       x  x x                     x',
+        'x                            x     x',
+        'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
     ]; 
 
     for (var i = 0; i < level.length; i++) {
@@ -63,40 +78,192 @@ export default class extends Phaser.State {
 
             // Create a wall and add it to the 'walls' group
             if (level[i][j] == 'x') {
-                var wall = game.add.sprite(0+60*j, 0+60*i, 'wall');
+                var wall = game.add.sprite(0+30*j, 0+30*i, 'misc', 14);
+                wall.width = 30;
+                wall.height = 30;
                 //console.log(wall);
                 this.walls.add(wall);
                 wall.body.immovable = true; 
+            } else if (level[i][j] === 'c') {
+
+                var coin = game.add.sprite(0+30*j, 0+30*i, 'misc', 18);
+                coin.width = 30;
+                coin.height = 30;
+                this.coins.add(coin);
+                coin.body.immovable = true;
+
+                // TODO: Is it ok to really create own anim to EACH sprite??
+                coin.animations.add(
+                  'spin',
+                  [18,19,20,21,22,23]
+                );
+
+                coin.play('spin', 8, true);                
+
             }
         }
     }
+    
+    this.p1 = new Mushroom({
+      game: this.game,
+      playerNum: 1,
+      x: 1000 - 50,
+      y: 900 - 50,
+      asset: 'players'
+    })
+
+    this.p2 = new Mushroom({
+      game: this.game,
+      playerNum: 2,
+      x: 50,
+      y: 850,
+      asset: 'players'
+    })
+
+    console.log(this.p1);
+
+
+    this.game.add.existing(this.p1)
+    this.game.add.existing(this.p2)
+
+    ////////////////////////
+    // p1 walk animations //
+    ////////////////////////
+    this.p1.setDefaultFrame(1);
+    this.p1.animations.add(
+      'walk_right', 
+      [24,25,26],
+      15,
+      false
+    );
+
+    //this.p1.animations.play('walk_left', 15, true);    
+
+    this.p1.animations.add(
+      'walk_left', 
+      [36,37,38],
+      15,
+      false
+    );
+
+    ////////////////////////
+    // p2 walk animations //
+    ////////////////////////
+    var walkRightFirstFrame = 10*12+6;
+    this.p2.setDefaultFrame(8*12+7);
+
+    this.p2.animations.add(
+      'walk_right', 
+      [walkRightFirstFrame,walkRightFirstFrame+1,walkRightFirstFrame+2],
+      15,
+      false
+    );
+
+    //this.p1.animations.play('walk_left', 15, true);    
+
+    var walkLeftFirstFrame = 11*12+6;
+    this.p2.animations.add(
+      'walk_left', 
+      [walkLeftFirstFrame,walkLeftFirstFrame+1,walkLeftFirstFrame+2],
+      15,
+      false
+    );
+
+
+
+
+    //this.p1.animations.play('walk_right', 15, true); 
+
+
+
+
+    this.p1.body.gravity.y = 500;
+    this.p2.body.gravity.y = 500;
+
+    // Remember to change here when changing screen dimensions
+    // in config.js
+    game.world.setBounds(0, 0, 1200, 1200 * (3/4));
+    //game.camera.follow(this.p1);
+
 
   }
 
   render() {
     if (__DEV__) {
-      this.game.debug.spriteInfo(this.mushroom, 32, 32)
+      this.game.debug.spriteInfo(this.p1, 32, 32)
     }
   }
 
   update() {
 
     // Ensure player does not fall through walls/ground.
-    game.physics.arcade.collide(this.mushroom, this.walls);
+    game.physics.arcade.collide(this.p1, this.walls);
+    game.physics.arcade.collide(this.p2, this.walls);
+
+    game.physics.arcade.collide(this.p2, this.p1);
+
+
+    game.physics.arcade.overlap(
+      [this.p1, this.p2], 
+      this.coins, 
+      coinWasCollected, 
+      null, 
+      this
+    );
 
     // Whole game here
-    // Move the player when an arrow key is pressed
-    if (this.cursor.left.isDown) 
-        this.mushroom.body.velocity.x = -200;
-    else if (this.cursor.right.isDown) 
-        this.mushroom.body.velocity.x = 200;
-    else 
-        this.mushroom.body.velocity.x = 0;
+
+    //////////////////////
+    ///// P1 movement ////
+    //////////////////////
+
+    // Move the player 1 when an arrow key is pressed
+    if (this.p1Controls.left.isDown) {
+        this.p1.animations.play('walk_left', 15, true);
+        this.p1.body.velocity.x = -130;
+    } else if (this.p1Controls.right.isDown) {
+        this.p1.animations.play('walk_right', 15, true);
+        this.p1.body.velocity.x = 130;
+    } else {
+        this.p1.animations.stop(null, true);
+        this.p1.frame = this.p1.getDefaultFrame();
+        this.p1.body.velocity.x = 0;
+    } 
 
     // Make the mushroom jump if he is touching the ground
-    if (this.cursor.up.isDown && this.mushroom.body.touching.down) 
-        this.mushroom.body.velocity.y = -250;
+    if (this.p1Controls.up.isDown && this.p1.body.touching.down) {
+        this.p1.body.velocity.y = -360;
+    }
 
+    //////////////////////
+    ///// P2 movement ////
+    //////////////////////
+
+    // Move the player 1 when an arrow key is pressed
+    if (this.p2Controls.left.isDown) {
+        this.p2.animations.play('walk_left', 15, true);
+        this.p2.body.velocity.x = -130;
+    } else if (this.p2Controls.right.isDown) {
+        this.p2.animations.play('walk_right', 15, true);
+        this.p2.body.velocity.x = 130;
+    } else {
+        this.p2.frame = this.p2.getDefaultFrame();
+        this.p2.body.velocity.x = 0;
+    } 
+
+    // Make the mushroom jump if he is touching the ground
+    if (this.p2Controls.up.isDown && this.p2.body.touching.down) {
+        this.p2.body.velocity.y = -360;
+    }
 
   }
+
+
+
+}
+
+function coinWasCollected(player, coin) {
+  coin.kill();
+
+  console.log("Player " + player.playerNum + " collected coin");
 }
