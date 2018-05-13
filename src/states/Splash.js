@@ -29,6 +29,12 @@ export default class extends Phaser.State {
     );
 
     this.load.spritesheet(
+      'objects', 
+      'assets/images/object_sprites.png', 
+      8, 8, 12*12
+    );
+
+    this.load.spritesheet(
       'slimes', 
       'assets/images/slime_sprites.png', 
       8, 8, 12*12
@@ -37,6 +43,18 @@ export default class extends Phaser.State {
   }
 
   create () {
-    this.state.start('Game')
+
+    game.input.gamepad.start();
+
+    // To listen to buttons from a specific pad listen directly on that pad game.input.gamepad.padX, where X = pad 1-4
+    var pad1 = game.input.gamepad.pad1;
+
+    pad1.addCallbacks(this, { onConnect: () => {
+      // Gamepad is connected, can start the game.  
+      this.state.start('Game')
+
+      
+    } });
+
   }
 }

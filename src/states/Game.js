@@ -4,22 +4,70 @@ import Mushroom from '../sprites/Mushroom'
 import Slime from '../sprites/enemies/Slime'
 
 export default class extends Phaser.State {
-  init() { }
-  preload() { }
+  init() {
+
+
+  }
+  preload() { 
+
+
+  }
 
   create() {
-    // Cursors & movement control
 
-    // p1 keys
-    this.p1Controls = game.input.keyboard.createCursorKeys();
+    // To listen to buttons from a specific pad listen directly on that pad game.input.gamepad.padX, where X = pad 1-4
+    this.pad1 = game.input.gamepad.pad1;
 
-    // p2 keys
+
+    console.log(this.pad1);
+    console.log("UP BUTTON")
+    console.log(this.pad1.getButton(Phaser.Gamepad.XBOX360_DPAD_UP));
+
     this.p2Controls = {
+      /*
       up: game.input.keyboard.addKey(Phaser.Keyboard.W),
       down: game.input.keyboard.addKey(Phaser.Keyboard.S),
       left: game.input.keyboard.addKey(Phaser.Keyboard.A),
       right: game.input.keyboard.addKey(Phaser.Keyboard.D),
+      */
+      up: this.pad1.getButton(Phaser.Gamepad.XBOX360_A),
+      down: this.pad1.getButton(Phaser.Gamepad.XBOX360_LEFT_BUMPER),
+      left: this.pad1.getButton(Phaser.Gamepad.XBOX360_DPAD_LEFT),
+      right: this.pad1.getButton(Phaser.Gamepad.XBOX360_DPAD_RIGHT),
     };
+
+    /*
+    this.pad1.addCallbacks(this, { onConnect: () => {
+      
+      console.warn("PAD CONNECTED");
+      console.log("Up button")
+      console.log(this.pad1.getButton(Phaser.Gamepad.XBOX360_DPAD_UP));
+
+      // p2 keys
+      this.p2Controls = {
+        
+        up: game.input.keyboard.addKey(Phaser.Keyboard.W),
+        down: game.input.keyboard.addKey(Phaser.Keyboard.S),
+        left: game.input.keyboard.addKey(Phaser.Keyboard.A),
+        right: game.input.keyboard.addKey(Phaser.Keyboard.D),
+        
+        up: this.pad1.getButton(Phaser.Gamepad.XBOX360_DPAD_UP),
+        down: this.pad1.getButton(Phaser.Gamepad.XBOX360_DPAD_DOWN),
+        left: this.pad1.getButton(Phaser.Gamepad.XBOX360_DPAD_LEFT),
+        right: this.pad1.getButton(Phaser.Gamepad.XBOX360_DPAD_RIGHT),
+      };
+      
+    } });
+    */
+
+    // Cursors & movement control
+
+    // p1 keys
+    this.p1Controls = game.input.keyboard.createCursorKeys();
+    this.p1Controls.down = game.input.keyboard.addKey(Phaser.Keyboard.P);
+
+
+
 
     game.physics.startSystem(Phaser.Physics.ARCADE);
 
@@ -37,6 +85,45 @@ export default class extends Phaser.State {
     this.walls = game.add.group();
     this.coins = game.add.group();
     this.enemies = game.add.group();
+
+    ////////////////////////////////////////
+    // Bullets group
+    // Create the group using the group factory
+    this.bullets = game.add.group();
+    // To move the sprites later on, we have to enable the body
+    this.bullets.enableBody = true;
+    // We're going to set the body type to the ARCADE physics, since we don't need any advanced physics
+    this.bullets.physicsBodyType = Phaser.Physics.ARCADE;
+    /*
+   
+      This will create 20 sprites and add it to the stage. They're inactive and invisible, but they're there for later use.
+      We only have 20 laser this.bullets available, and will 'clean' and reset they're off the screen.
+      This way we save on precious resources by not constantly adding & removing new sprites to the stage
+   
+    */
+    this.bullets.createMultiple(30, 'objects');
+    this.bullets.setAll('frame', 20);
+   
+    /*
+   
+      Behind the scenes, this will call the following function on all this.bullets:
+        - events.onOutOfBounds.add(resetLaser)
+      Every sprite has an 'events' property, where you can add callbacks to specific events.
+      Instead of looping over every sprite in the group manually, this function will do it for us.
+   
+    */
+    // Same as above, set the anchor of every sprite to 0.5, 1.0
+    this.bullets.callAll('anchor.setTo', 'anchor', 0.5, 1.0);
+
+    this.bullets.setAll('width', 8);
+    this.bullets.setAll('height', 8);
+
+    // COMMENTED OUT AS OPTIMIZATION (Bullets should never leave world)
+    //this.bullets.setAll('outOfBoundsKill', true);
+    // This will set 'checkWorldBounds' to true on all sprites in the group
+    //this.bullets.setAll('checkWorldBounds', true);
+
+    ////////////////////////////////////////
 
     banner.padding.set(10, 16)
     banner.anchor.setTo(0.5)
@@ -234,22 +321,108 @@ export default class extends Phaser.State {
     }
   }
 
-  update() {
-
+  updatePlayer(player, playerControls) {
     // Ensure player does not fall through walls/ground.
-    if (this.p1.playerAlive) {
-      game.physics.arcade.collide(this.p1, this.walls);
+    if (player.playerAlive) {
+      game.physics.arcade.collide(player, this.walls);
     } 
 
-    if (this.p2.playerAlive) {
-      game.physics.arcade.collide(this.p2, this.walls);
+    //////////////////////
+    ///// player movement ////
+    //////////////////////
+
+    if (player.playerAlive) {
+
+      // Move the player 1 when an arrow key is pressed
+      if (playerControls.left.isDown) {
+          player.direction = -1;
+          player.animations.play('walk_left', 15, true);
+          player.body.velocity.x = -130;
+      } else if (playerControls.right.isDown) {
+          player.direction = 1;
+          player.animations.play('walk_right', 15, true);
+          player.body.velocity.x = 130;
+      } else {
+          player.animations.stop(null, true);
+          //player.frame = player.getDefaultFrame();
+          player.body.velocity.x = 0;
+      } 
+
+      // Detect shooting
+      if (playerControls.down.isDown && player.allowedToShoot()) {
+
+        console.log("Shoot!");
+
+        // Firing logic
+        var bullet = this.bullets.getFirstExists(false);
+        if (bullet) {
+          // If we have a bullet, set it to the starting position
+          bullet.reset(player.x + (18*player.direction), player.y+2);
+          // Give it a velocity of -500 so it starts shooting
+          bullet.body.velocity.x = player.direction * 500;
+
+          player.shotFired();
+        }
+
+
+      }
+
+      // Make the mushroom jump if he is touching the ground
+      if (playerControls.up.isDown && player.body.touching.down) {
+          player.body.velocity.y = -360;
+      }
+
       
     }
 
-    game.physics.arcade.collide(this.p2, this.p1);
-    
-    game.physics.arcade.collide(this.enemies, this.walls);
+  }    
 
+  update() {
+
+    // Collision between bullet and wall
+    game.physics.arcade.overlap(
+      this.bullets, 
+      this.walls, 
+      (bullet, _wall) => {
+        bullet.kill();
+      }, 
+      null, 
+      this
+    );
+
+    // Collision between bullet and enemy
+    game.physics.arcade.overlap(
+      this.bullets, 
+      this.enemies, 
+      (bullet, enemy) => {
+        bullet.kill();
+        enemy.kill();
+      }, 
+      null, 
+      this
+    );
+
+
+    // Collision between bullet and player
+    game.physics.arcade.overlap(
+      [this.p1, this.p2], 
+      this.bullets, 
+      (player, bullet) => {
+
+        bullet.kill();
+        if (player.playerAlive) {
+          player.youWereKilled();
+        }
+        
+      }, 
+      null, 
+      this
+    );
+
+    // Collision between players
+    game.physics.arcade.collide(this.p1, this.p2);
+    // Enemies <-> walls
+    game.physics.arcade.collide(this.enemies, this.walls);
 
     game.physics.arcade.overlap(
       [this.p1, this.p2], 
@@ -258,6 +431,7 @@ export default class extends Phaser.State {
       null, 
       this
     );
+
     // Check collision between slimes and players
     game.physics.arcade.overlap(
       [this.p1, this.p2], 
@@ -267,62 +441,9 @@ export default class extends Phaser.State {
       this
     );
 
-    // Whole game here
-
-    //////////////////////
-    ///// P1 movement ////
-    //////////////////////
-
-    if (this.p1.playerAlive) {
-
-      // Move the player 1 when an arrow key is pressed
-      if (this.p1Controls.left.isDown) {
-          this.p1.animations.play('walk_left', 15, true);
-          this.p1.body.velocity.x = -130;
-      } else if (this.p1Controls.right.isDown) {
-          this.p1.animations.play('walk_right', 15, true);
-          this.p1.body.velocity.x = 130;
-      } else {
-          this.p1.animations.stop(null, true);
-          this.p1.frame = this.p1.getDefaultFrame();
-          this.p1.body.velocity.x = 0;
-      } 
-
-      // Make the mushroom jump if he is touching the ground
-      if (this.p1Controls.up.isDown && this.p1.body.touching.down) {
-          this.p1.body.velocity.y = -360;
-      }
-
-      
-    }
-
-    //////////////////////
-    ///// P2 movement ////
-    //////////////////////
-    if (this.p2.playerAlive) {
-
-      // Move the player 1 when an arrow key is pressed
-      if (this.p2Controls.left.isDown) {
-          this.p2.animations.play('walk_left', 15, true);
-          this.p2.body.velocity.x = -130;
-      } else if (this.p2Controls.right.isDown) {
-          this.p2.animations.play('walk_right', 15, true);
-          this.p2.body.velocity.x = 130;
-      } else {
-          this.p2.animations.stop(null, true);
-          this.p2.frame = this.p2.getDefaultFrame();
-          this.p2.body.velocity.x = 0;
-      } 
-
-      // Make the mushroom jump if he is touching the ground
-      if (this.p2Controls.up.isDown && this.p2.body.touching.down) {
-          this.p2.body.velocity.y = -360;
-      }
-
-    }
-
+    this.updatePlayer(this.p1, this.p1Controls);
+    this.updatePlayer(this.p2, this.p2Controls);    
   }
-
 
 
 }

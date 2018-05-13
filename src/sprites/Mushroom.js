@@ -19,11 +19,15 @@ export default class extends Phaser.Sprite {
     this.width = 26;
     this.height = 26;
 
+    this.direction = -1;
+
     // By default, change if needed.
     this.frameNum = 0;
     this.playerNum = playerNum;
 
     this.playerAlive = true;
+
+    this.lastShotTime = 0;
   }
 
   update () {
@@ -79,4 +83,18 @@ export default class extends Phaser.Sprite {
 	setTimeout(this.respawn.bind(this), 3000);
 
   }
+
+
+  /// Shooting logic
+  allowedToShoot() {
+  	var now = Date.now(); // in ms
+
+  	return now - this.lastShotTime > 500;
+  }
+
+  shotFired() {
+  	this.lastShotTime = Date.now();
+  }
+
+
 }
