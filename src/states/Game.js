@@ -1,6 +1,7 @@
 /* globals __DEV__ */
 import Phaser from 'phaser'
 import Mushroom from '../sprites/Mushroom'
+import Slime from '../sprites/enemies/Slime'
 
 export default class extends Phaser.State {
   init() { }
@@ -35,6 +36,7 @@ export default class extends Phaser.State {
     //this.bg = game.add.group();
     this.walls = game.add.group();
     this.coins = game.add.group();
+    this.enemies = game.add.group();
 
     banner.padding.set(10, 16)
     banner.anchor.setTo(0.5)
@@ -43,11 +45,11 @@ export default class extends Phaser.State {
     var level = [
         'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
         'x                                  x',        
-        'x   c                c           c x',        
+        'x   c                c   s       c x',        
         'x                                c x',        
         'x                 x      x       c x',        
-        'x     x                           cx',        
-        'x                                  x',        
+        'x s   x                           cx',        
+        'x         s                        x',        
         'x        xxx     x                 x',        
         'x  x             x           x x   x',        
         'x                                  x',        
@@ -58,7 +60,7 @@ export default class extends Phaser.State {
         'x    c                             x',        
         'x                    x             x',        
         'x   x  x         x                 x',        
-        'x   x      x xx       xx x x       x',        
+        'x   x  s   x xx       xx x x       x',        
         'x   xx                   c   c     x',        
         'x                                  x',        
         'x     xxxxx  x x                   x',        
@@ -68,7 +70,7 @@ export default class extends Phaser.State {
         'x                          x       x',
         'x       x        x  x  c  x  x     x',       
         'x   c                              x',
-        'x       x  x x                     x',
+        'x       x    x   s                 x',
         'x                            x     x',
         'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
     ]; 
@@ -100,6 +102,37 @@ export default class extends Phaser.State {
 
                 coin.play('spin', 8, true);                
 
+            } else if (level[i][j] === 's') {
+
+                var slime = new Slime({
+                  game: this.game,
+                  playerNum: 2,
+                  x: 0+30*j,
+                  y: 0+30*i,
+                  asset: 'slimes',
+                  wallsGroup: this.walls
+                })
+
+                this.game.add.existing(slime);
+
+                //////////////////////////
+                // slime walk animation //
+                //////////////////////////
+                slime.setDefaultFrame(60);
+                slime.animations.add(
+                  'slime_walk_right', 
+                  [60,61,62,63],
+                  10,
+                  false
+                );
+
+                slime.animations.play('slime_walk_right', true, true);
+
+                slime.body.gravity.y = 500;
+                slime.body.collideWorldBounds = true;
+
+                this.enemies.add(slime);            
+
             }
         }
     }
@@ -120,6 +153,15 @@ export default class extends Phaser.State {
       asset: 'players'
     })
 
+    this.enemy1 = new Slime({
+      game: this.game,
+      playerNum: 2,
+      x: 250,
+      y: 550,
+      asset: 'slimes',
+      wallsGroup: this.walls
+    })
+
     console.log(this.p1);
 
 
@@ -136,6 +178,7 @@ export default class extends Phaser.State {
       15,
       false
     );
+
 
     //this.p1.animations.play('walk_left', 15, true);    
 
@@ -169,16 +212,13 @@ export default class extends Phaser.State {
       false
     );
 
-
-
-
     //this.p1.animations.play('walk_right', 15, true); 
-
-
-
 
     this.p1.body.gravity.y = 500;
     this.p2.body.gravity.y = 500;
+
+    this.p1.body.collideWorldBounds = true;
+    this.p2.body.collideWorldBounds = true;
 
     // Remember to change here when changing screen dimensions
     // in config.js
@@ -197,16 +237,32 @@ export default class extends Phaser.State {
   update() {
 
     // Ensure player does not fall through walls/ground.
-    game.physics.arcade.collide(this.p1, this.walls);
-    game.physics.arcade.collide(this.p2, this.walls);
+    if (this.p1.playerAlive) {
+      game.physics.arcade.collide(this.p1, this.walls);
+    } 
+
+    if (this.p2.playerAlive) {
+      game.physics.arcade.collide(this.p2, this.walls);
+      
+    }
 
     game.physics.arcade.collide(this.p2, this.p1);
+    
+    game.physics.arcade.collide(this.enemies, this.walls);
 
 
     game.physics.arcade.overlap(
       [this.p1, this.p2], 
       this.coins, 
       coinWasCollected, 
+      null, 
+      this
+    );
+    // Check collision between slimes and players
+    game.physics.arcade.overlap(
+      [this.p1, this.p2], 
+      this.enemies, 
+      playerTouchedEnemy, 
       null, 
       this
     );
@@ -217,43 +273,52 @@ export default class extends Phaser.State {
     ///// P1 movement ////
     //////////////////////
 
-    // Move the player 1 when an arrow key is pressed
-    if (this.p1Controls.left.isDown) {
-        this.p1.animations.play('walk_left', 15, true);
-        this.p1.body.velocity.x = -130;
-    } else if (this.p1Controls.right.isDown) {
-        this.p1.animations.play('walk_right', 15, true);
-        this.p1.body.velocity.x = 130;
-    } else {
-        this.p1.animations.stop(null, true);
-        this.p1.frame = this.p1.getDefaultFrame();
-        this.p1.body.velocity.x = 0;
-    } 
+    if (this.p1.playerAlive) {
 
-    // Make the mushroom jump if he is touching the ground
-    if (this.p1Controls.up.isDown && this.p1.body.touching.down) {
-        this.p1.body.velocity.y = -360;
+      // Move the player 1 when an arrow key is pressed
+      if (this.p1Controls.left.isDown) {
+          this.p1.animations.play('walk_left', 15, true);
+          this.p1.body.velocity.x = -130;
+      } else if (this.p1Controls.right.isDown) {
+          this.p1.animations.play('walk_right', 15, true);
+          this.p1.body.velocity.x = 130;
+      } else {
+          this.p1.animations.stop(null, true);
+          this.p1.frame = this.p1.getDefaultFrame();
+          this.p1.body.velocity.x = 0;
+      } 
+
+      // Make the mushroom jump if he is touching the ground
+      if (this.p1Controls.up.isDown && this.p1.body.touching.down) {
+          this.p1.body.velocity.y = -360;
+      }
+
+      
     }
 
     //////////////////////
     ///// P2 movement ////
     //////////////////////
+    if (this.p2.playerAlive) {
 
-    // Move the player 1 when an arrow key is pressed
-    if (this.p2Controls.left.isDown) {
-        this.p2.animations.play('walk_left', 15, true);
-        this.p2.body.velocity.x = -130;
-    } else if (this.p2Controls.right.isDown) {
-        this.p2.animations.play('walk_right', 15, true);
-        this.p2.body.velocity.x = 130;
-    } else {
-        this.p2.frame = this.p2.getDefaultFrame();
-        this.p2.body.velocity.x = 0;
-    } 
+      // Move the player 1 when an arrow key is pressed
+      if (this.p2Controls.left.isDown) {
+          this.p2.animations.play('walk_left', 15, true);
+          this.p2.body.velocity.x = -130;
+      } else if (this.p2Controls.right.isDown) {
+          this.p2.animations.play('walk_right', 15, true);
+          this.p2.body.velocity.x = 130;
+      } else {
+          this.p2.animations.stop(null, true);
+          this.p2.frame = this.p2.getDefaultFrame();
+          this.p2.body.velocity.x = 0;
+      } 
 
-    // Make the mushroom jump if he is touching the ground
-    if (this.p2Controls.up.isDown && this.p2.body.touching.down) {
-        this.p2.body.velocity.y = -360;
+      // Make the mushroom jump if he is touching the ground
+      if (this.p2Controls.up.isDown && this.p2.body.touching.down) {
+          this.p2.body.velocity.y = -360;
+      }
+
     }
 
   }
@@ -263,7 +328,18 @@ export default class extends Phaser.State {
 }
 
 function coinWasCollected(player, coin) {
-  coin.kill();
 
-  console.log("Player " + player.playerNum + " collected coin");
+  if (player.playerAlive) {
+    coin.kill();
+  }
+
+}
+
+function playerTouchedEnemy(player, enemy) {
+  console.log("Player " + player.playerNum);
+
+  if (player.playerAlive) {
+    player.youWereKilled();
+  }
+  //enemy.kill();
 }

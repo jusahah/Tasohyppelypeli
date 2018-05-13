@@ -28,6 +28,12 @@ export default class extends Phaser.State {
       8, 8, 12*12
     );
 
+    this.load.spritesheet(
+      'slimes', 
+      'assets/images/slime_sprites.png', 
+      8, 8, 12*12
+    );
+
   }
 
   create () {
