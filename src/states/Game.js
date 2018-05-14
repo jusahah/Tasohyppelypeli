@@ -15,6 +15,10 @@ export default class extends Phaser.State {
 
   create() {
 
+
+    console.log("Game created");
+
+
     // To listen to buttons from a specific pad listen directly on that pad game.input.gamepad.padX, where X = pad 1-4
     this.pad1 = game.input.gamepad.pad1;
 
@@ -86,6 +90,22 @@ export default class extends Phaser.State {
     this.coins = game.add.group();
     this.enemies = game.add.group();
 
+    this.p1 = new Mushroom({
+      game: this.game,
+      playerNum: 1,
+      x: 1000 - 50,
+      y: 900 - 50,
+      asset: 'players'
+    })
+
+    this.p2 = new Mushroom({
+      game: this.game,
+      playerNum: 2,
+      x: 50,
+      y: 850,
+      asset: 'players'
+    })
+
     ////////////////////////////////////////
     // Bullets group
     // Create the group using the group factory
@@ -135,21 +155,21 @@ export default class extends Phaser.State {
         'x   c                c   s       c x',        
         'x                                c x',        
         'x                 x      x       c x',        
-        'x s   x                           cx',        
-        'x         s                        x',        
+        'x     x                           cx',        
+        'x                                  x',        
         'x        xxx     x                 x',        
         'x  x             x           x x   x',        
-        'x                                  x',        
+        'x  s   x       s                   x',        
         'xxxxxxxxx      c     x    c        x',        
         'x          x xxx               x   x',        
-        'x                        x    x    x',        
+        'x s                      x    x    x',        
         'x              xxx           x     x',        
         'x    c                             x',        
-        'x                    x             x',        
+        'x                 c  x             x',        
         'x   x  x         x                 x',        
-        'x   x  s   x xx       xx x x       x',        
+        'x   x      x xx       xx x x       x',        
         'x   xx                   c   c     x',        
-        'x                                  x',        
+        'x      s              s            x',        
         'x     xxxxx  x x                   x',        
         'x                  x               x',
         'x                               c  x',
@@ -157,12 +177,13 @@ export default class extends Phaser.State {
         'x                          x       x',
         'x       x        x  x  c  x  x     x',       
         'x   c                              x',
-        'x       x    x   s                 x',
-        'x                            x     x',
+        'x       x    x                     x',
+        'x                            xx    x',
         'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
     ]; 
 
     for (var i = 0; i < level.length; i++) {
+
         for (var j = 0; j < level[i].length; j++) {
 
             // Create a wall and add it to the 'walls' group
@@ -197,7 +218,9 @@ export default class extends Phaser.State {
                   x: 0+30*j,
                   y: 0+30*i,
                   asset: 'slimes',
-                  wallsGroup: this.walls
+                  wallsGroup: this.walls,
+                  players: [this.p1, this.p2],
+                  bulletsGroup: this.bullets
                 })
 
                 this.game.add.existing(slime);
@@ -223,22 +246,6 @@ export default class extends Phaser.State {
             }
         }
     }
-    
-    this.p1 = new Mushroom({
-      game: this.game,
-      playerNum: 1,
-      x: 1000 - 50,
-      y: 900 - 50,
-      asset: 'players'
-    })
-
-    this.p2 = new Mushroom({
-      game: this.game,
-      playerNum: 2,
-      x: 50,
-      y: 850,
-      asset: 'players'
-    })
 
     this.enemy1 = new Slime({
       game: this.game,
@@ -351,8 +358,6 @@ export default class extends Phaser.State {
       // Detect shooting
       if (playerControls.down.isDown && player.allowedToShoot()) {
 
-        console.log("Shoot!");
-
         // Firing logic
         var bullet = this.bullets.getFirstExists(false);
         if (bullet) {
@@ -442,7 +447,8 @@ export default class extends Phaser.State {
     );
 
     this.updatePlayer(this.p1, this.p1Controls);
-    this.updatePlayer(this.p2, this.p2Controls);    
+    this.updatePlayer(this.p2, this.p2Controls);  
+
   }
 
 
