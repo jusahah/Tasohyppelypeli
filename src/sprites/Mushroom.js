@@ -1,4 +1,5 @@
 import Phaser from 'phaser'
+import _ from 'lodash'
 
 export default class extends Phaser.Sprite {
 
@@ -26,8 +27,20 @@ export default class extends Phaser.Sprite {
     this.playerNum = playerNum;
 
     this.playerAlive = true;
+    this.completedLevel = false;
 
     this.lastShotTime = 0;
+
+    // Keys
+    this.keys = [];
+
+    // Start tile
+    this.startTile = null;
+  }
+
+  setSpawnPosition(x, y) {
+    this.spawnPosition.x = x;
+    this.spawnPosition.y = y;
   }
 
   update () {
@@ -42,9 +55,40 @@ export default class extends Phaser.Sprite {
   	return this.defaultFrameNum;
   }
 
+  keyCollected(keyColor) {
+    if (this.keys.length > 0) {
+      // Remove all keys
+      this.keys.length = 0;
+    }
+
+    this.keys.push(keyColor);
+  }
+
+  checkHasKey(keyColor) {
+    return this.keys.indexOf(keyColor) !== -1;
+  }
+
+  useKey(keyColor) {
+    if (this.checkHasKey(keyColor)) {
+      this.keys.length = 0; // Remove ALL keys
+      return true;
+    }
+
+    return false;
+  }
+
+  completeLevel() {
+    this.completedLevel = true;
+    this.playerAlive = false;
+  }
+
+  hasCompletedLevel() {
+    return this.completedLevel;
+  }
+
   respawn() {
   	
-	this.body.moves = false;
+	  this.body.moves = false;
   	this.x = this.spawnPosition.x;
   	this.y = this.spawnPosition.y;
 
