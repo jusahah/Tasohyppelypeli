@@ -82,6 +82,8 @@ export default class extends Phaser.State {
 
   setTileContent(tile, letter) {
 
+    console.log("Set tile content: " + letter);
+
     function setCharAt(str,index,chr) {
         if(index > str.length-1) return str;
         return str.substr(0,index) + chr + str.substr(index+1);
@@ -102,6 +104,9 @@ export default class extends Phaser.State {
       // Delete old door and replace with outer wall
       this.deleteCurrentLevelDoorIfExists();
 
+      // We have to re-fetch row because it might have been changed above
+      row = this.map[tile.yIndex];
+
       // Create new door and delete current outer wall
       var updatedRow = setCharAt(row, tile.xIndex, 'D');
       this.map[tile.yIndex] = updatedRow;
@@ -112,11 +117,50 @@ export default class extends Phaser.State {
       this.createSpriteToTile(tile, 'D');
       // Set this so we can later find out easily where levelDoor is.
       this.levelDoorTile = Object.assign({}, tile);
+      return false;
     }
 
     if (letter === 'D') {
       // Not possible, can only create to outer wall tile
       return false;
+    }
+
+    if (letter === '1' || letter === '2') {
+
+      var playerLetter = letter;
+      // We are repositioning player to new location
+
+      var playerCurrentTile = this.findTileFor(letter);
+
+      console.log(playerCurrentTile);
+
+      // Delete players current position from this.map
+      var playerOldRow = this.map[playerCurrentTile.yIndex];
+      var updatedPlayerOldRow = setCharAt(
+        playerOldRow, 
+        playerCurrentTile.xIndex, 
+        ' '
+      );
+      this.map[playerCurrentTile.yIndex] = updatedPlayerOldRow;
+
+      // Set players new position to this.map
+      row = this.map[tile.yIndex];
+      var updatedRow = setCharAt(row, tile.xIndex, playerLetter);
+      this.map[tile.yIndex] = updatedRow; 
+
+      // Delete current contents of the tile player is being positioned into
+      this.deleteSpriteFromTile(tile);
+
+      // Place player to that tile
+      this.placePlayerToTile(
+        letter === '1' ? this.p1 : this.p2,
+        tile.xIndex,
+        tile.yIndex
+      );
+
+      console.log(this.map);
+
+      return;
     }
     
     if (letter === currentLetter) {
@@ -268,6 +312,7 @@ export default class extends Phaser.State {
 
     if (this.playerInTile(tile)) {
       // We do not want to do anything
+      console.warn("Player clicked - clickOccurred aborts")
       return false;
     }
 
@@ -281,6 +326,12 @@ export default class extends Phaser.State {
 
   }
 
+  placePlayerToTile(player, tileX, tileY) {
+    console.log("Place player to " + tileX + ", " + tileY)
+    player.x = 2+30*tileX; 
+    player.y = 2+30*tileY; 
+  }
+
   preparePlayers() {
     var level = this.map;
 
@@ -289,18 +340,19 @@ export default class extends Phaser.State {
         for (var j = 0; j < level[i].length; j++) {
 
             if (level[i][j] == '1') {
-                this.p1.x = 2+30*j; 
-                this.p1.y = 2+30*i;
+                this.placePlayerToTile(this.p1, j, i);
                 this.p1.inputEnabled = true;
                 this.p1.events.onInputDown.add(() => {
                   console.log("Player clicked: 1");
+                  this.selectedIcon = '1';
                 }, this);                
             } else if (level[i][j] == '2') {
-                this.p2.x = 2+30*j; 
-                this.p2.y = 2+30*i;
+                this.placePlayerToTile(this.p2, j, i);
                 this.p2.inputEnabled = true;
                 this.p2.events.onInputDown.add(() => {
                   console.log("Player clicked: 2");
+                  this.selectedIcon = '2';
+
                 }, this);
             }            
         }
