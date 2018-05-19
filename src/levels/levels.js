@@ -1,11 +1,11 @@
 export default [
-	
+	/*
 	{
 		name: 'Eka level',
 		map:[
 			"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
 			"X                                      X",
-			"X  s                                   X",
+			"X                                      X",
 			"X                                      X",
 			"X                                      X",
 			"X                                      X",
@@ -35,6 +35,7 @@ export default [
 			"XXXXXXXXXXXXXXXXXDXXXXXmmXXXXXXXXXXXXXXX",
 			]
 	},
+	*/
 
 
 
@@ -44,14 +45,14 @@ export default [
 	    map: [
 	        'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
 	        'X                                      X',        
-	        'X       c                c   s       c X',        
+	        'X       c          b  k  c   s  b    c X',        
 	        'X                                    c X',        
-	        'X                     x      x       c X',        
+	        'X                            x       c X',        
 	        'X         x                           cX',        
 	        'X                                      X',        
 	        'X            xxx     x                 X',        
 	        'X      x             x           x x   X',        
-	        'X      s   x       s                  sX',        
+	        'X      s   x       s                 s X',        
 	        'X    xxxxxxxx      c     x    c        X',        
 	        'X              x xxx               x   X',        
 	        'X                            x    x    X',        
@@ -63,14 +64,14 @@ export default [
 	        'X       xx                   c   c     X',        
 	        'X          s                           X',        
 	        'X         xxxxx  x x                   X',        
-	        'X                      x               X',
-	        'X                                   c  X',
+	        'X                                      X',
+	        'X                   x               c  X',
 	        'X                           x          X',
 	        'X                              x       X',
-	        'X           x        x  x  c  x  x     X',       
+	        'X           x        x     c  x  x     X',       
 	        'X       c                              X',
-	        'X           x    x               k     X',
-	        'X  1  2                          xx    D',
+	        'X         2  1   x    xxx              X',
+	        'X                               xx     D',
 	        'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
 	    ] 
 	},

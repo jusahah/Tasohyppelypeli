@@ -2,6 +2,7 @@
 import Phaser from 'phaser'
 import Mushroom from '../sprites/Mushroom'
 import Slime from '../sprites/enemies/Slime'
+import Beacon from '../sprites/enemies/Beacon'
 
 import _ from 'lodash'
 
@@ -267,6 +268,41 @@ export default class extends Phaser.State {
                 slime.body.collideWorldBounds = true;
 
                 this.enemies.add(slime);            
+
+            } else if (level[i][j] === 'b') {
+
+                var beacon = new Beacon({
+                  game: this.game,
+                  x: 0+30*j,
+                  y: 0+30*i,
+                  asset: 'objects',
+                  wallsGroup: this.walls,
+                  players: [this.p1, this.p2],
+                  bulletsGroup: this.bullets
+                })
+
+                this.game.add.existing(beacon);
+
+                //////////////////////////
+                // beacon walk animation //
+                //////////////////////////
+                beacon.setDefaultFrame(6);
+                
+                /*
+                beacon.animations.add(
+                  'slime_walk_right', 
+                  [60,61,62,63],
+                  10,
+                  false
+                );
+
+                beacon.animations.play('slime_walk_right', true, true);
+                */
+
+                beacon.body.gravity.y = -100;
+                beacon.body.collideWorldBounds = true;
+
+                this.enemies.add(beacon);            
 
             } else if (level[i][j] === '1' || level[i][j] === '2') {
 
