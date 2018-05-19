@@ -3,10 +3,14 @@ import Phaser from 'phaser'
 import Mushroom from '../sprites/Mushroom'
 import Slime from '../sprites/enemies/Slime'
 
+import _ from 'lodash'
+
 var ticks = 0;
 
 export default class extends Phaser.State {
-  init() {
+  init(levelMap) {
+    console.log("LevelEditor init");
+    console.log(levelMap);
     // Contains sprite objects that are active (in use)
     // under string key 'x,y'
     this.activeSprites = {};
@@ -15,7 +19,7 @@ export default class extends Phaser.State {
 
     // This is template of the level that will
     // be built upon when editing level
-    this.map = [
+    this.map = levelMap || [
           'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
           'X                                      X',        
           'X                                      X',        
@@ -72,7 +76,41 @@ export default class extends Phaser.State {
 
 
       x += this.iconSize + 6;
+    });
+
+    // Test and Finish texts
+    this.testButton = this.add.text(1000, 910, 'Test ', {
+      font: '40px Bangers',
+      fill: '#77BFA3',
+      smoothed: false
     })
+
+    this.testButton.inputEnabled = true;
+    this.testButton.events.onInputDown.add(() => {
+      console.log("Test clicked");
+      this.testLevelMap();
+    }, this);
+
+
+    this.finishButton = this.add.text(1080, 910, 'Finish ', {
+      font: '40px Bangers',
+      fill: '#77BFA3',
+      smoothed: false
+    })
+
+    this.finishButton.inputEnabled = true;
+    this.finishButton.events.onInputDown.add(() => {
+      console.log("Finish clicked");
+    }, this);
+
+  }
+
+  testLevelMap() {
+    // Launch Level state
+    this.state.start('Level', true, false, {
+      name: 'Test',
+      map: _.clone(this.map)
+    }, true);
   }
 
   getTileContent(tile) {
@@ -196,6 +234,7 @@ export default class extends Phaser.State {
     }
 
     if (this.levelDoorTile) {
+      console.log("Clearing old levelDoorTile")
       // Update this.map from 'D' to 'X' on our old level door place.
       var row = this.map[this.levelDoorTile.yIndex];
       var updatedRow = setCharAt(row, this.levelDoorTile.xIndex, 'X');
@@ -467,7 +506,10 @@ export default class extends Phaser.State {
     ////////////////////////////////////////////////
 
     this.outerWalls = game.add.group();
-
+    this.outerWalls.createMultiple(140, 'misc');
+    this.outerWalls.setAll('frame', 14);
+    this.outerWalls.setAll('width', 30);
+    this.outerWalls.setAll('height', 30); 
 
     var level = this.map;
 
@@ -477,14 +519,42 @@ export default class extends Phaser.State {
 
             // Create a wall and add it to the 'walls' group
             if (level[i][j] == 'X') {
-                var wall = game.add.sprite(0+30*j, 0+30*i, 'misc', 14);
-                wall.width = 30;
-                wall.height = 30;
-                //console.log(wall);
-                this.outerWalls.add(wall);
+              this.createSpriteToTile({
+                xIndex: j,
+                yIndex: i
+              }, 'X');
+            } else if (level[i][j] === 'c') {
+              this.createSpriteToTile({
+                xIndex: j,
+                yIndex: i
+              }, 'c');
+            } else if (level[i][j] === 's') {
+              this.createSpriteToTile({
+                xIndex: j,
+                yIndex: i
+              }, 's');
+            } else if (level[i][j] === 'x') {
+              this.createSpriteToTile({
+                xIndex: j,
+                yIndex: i
+              }, 'x');
+            } else if (level[i][j] === 'k') {
+              this.createSpriteToTile({
+                xIndex: j,
+                yIndex: i
+              }, 'k');
+            } else if (level[i][j] === 'D') {
+              this.createSpriteToTile({
+                xIndex: j,
+                yIndex: i
+              }, 'D');
 
-                this.activeSprites[j + ',' + i] = wall;
+              this.levelDoorTile = {
+                xIndex: j,
+                yIndex: i
+              };
             }
+            
         }
     }
 

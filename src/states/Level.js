@@ -3,10 +3,14 @@ import Phaser from 'phaser'
 import Mushroom from '../sprites/Mushroom'
 import Slime from '../sprites/enemies/Slime'
 
+import _ from 'lodash'
+
 var ticks = 0;
 
 export default class extends Phaser.State {
-  init(level) {
+  init(level, returnToLevelEditor) {
+
+    this.returnToLevelEditor = !!returnToLevelEditor;
 
     this.completedLevel = false;
     this.levelMap = level.map;
@@ -19,6 +23,21 @@ export default class extends Phaser.State {
   }
 
   create() {
+
+    if (this.returnToLevelEditor) {
+      // Add button that exits testing the level and goes back to editor.
+      this.backToEditorButton = this.add.text(960, 910, 'Back to editor ', {
+        font: '40px Bangers',
+        fill: '#77BFA3',
+        smoothed: false
+      })
+
+      this.backToEditorButton.inputEnabled = true;
+      this.backToEditorButton.events.onInputDown.add(() => {
+        console.log("Back to editor clicked");
+        this.state.start('LevelEditor', true, false, _.clone(this.levelMap));
+      }, this);
+    }
 
     console.log("Level created");
 
@@ -161,7 +180,7 @@ export default class extends Phaser.State {
         for (var j = 0; j < level[i].length; j++) {
 
             // Create a wall and add it to the 'walls' group
-            if (level[i][j] == 'x') {
+            if (level[i][j] == 'X' || level[i][j] == 'x') {
                 var wall = game.add.sprite(0+30*j, 0+30*i, 'misc', 14);
                 wall.width = 30;
                 wall.height = 30;
@@ -340,7 +359,13 @@ export default class extends Phaser.State {
     console.log("Level completed!");
     if (!this.completedLevel) {
       this.completedLevel = true;
-      this.state.start('Game', true, false);
+
+      if (this.returnToLevelEditor) {
+        // We switch to level editor, not to next level!!
+        this.state.start('LevelEditor', true, false, _.clone(this.levelMap));
+      } else {
+        this.state.start('Game', true, false);
+      }
     }
 
   }
@@ -489,6 +514,14 @@ export default class extends Phaser.State {
     this.updatePlayer(this.p1, this.p1Controls);
     this.updatePlayer(this.p2, this.p2Controls);  
 
+  }
+
+  shutdown() {
+    // Called just before this state dies.
+
+    // Release timeout handlers that are still waiting their turn!
+    this.p1.releaseTimeouts();
+    this.p2.releaseTimeouts();
   }
 
 

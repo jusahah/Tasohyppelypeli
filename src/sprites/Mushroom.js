@@ -36,6 +36,20 @@ export default class extends Phaser.Sprite {
 
     // Start tile
     this.startTile = null;
+
+    // Timeout handler (allows to destroy timeout before its run)
+    this.respawnTimeout = null;
+  }
+
+  releaseTimeouts() {
+
+    console.log("Release timeouts for " + this.playerNum)
+
+    if (this.respawnTimeout) {
+      clearTimeout(this.respawnTimeout);
+      this.respawnTimeout = null;
+    }
+
   }
 
   setSpawnPosition(x, y) {
@@ -87,7 +101,9 @@ export default class extends Phaser.Sprite {
   }
 
   respawn() {
-  	
+
+  	this.respawnTimeout = null;
+
 	  this.body.moves = false;
   	this.x = this.spawnPosition.x;
   	this.y = this.spawnPosition.y;
@@ -121,10 +137,10 @@ export default class extends Phaser.Sprite {
   	this.immovable = true;
   	this.body.collideWorldBounds = false;
   	this.body.velocity.x = 0;
-	this.animations.stop(null, true);
-	this.frame = this.getDefaultFrame();
+  	this.animations.stop(null, true);
+  	this.frame = this.getDefaultFrame();
 
-	setTimeout(this.respawn.bind(this), 3000);
+  	this.respawnTimeout = setTimeout(this.respawn.bind(this), 3000);
 
   }
 
