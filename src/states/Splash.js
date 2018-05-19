@@ -54,7 +54,10 @@ export default class extends Phaser.State {
     pad1.addCallbacks(this, { onConnect: () => {
       console.log("Gamepad connected")
       // Gamepad is connected, can start the game.  
-      this.state.start('Game')
+      
+      // Test level editor
+      this.state.start('LevelEditor');
+      //this.state.start('Game')
 
     } });
 

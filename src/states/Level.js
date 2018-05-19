@@ -20,7 +20,6 @@ export default class extends Phaser.State {
 
   create() {
 
-
     console.log("Level created");
 
 
