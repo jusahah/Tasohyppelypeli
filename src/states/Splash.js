@@ -56,8 +56,8 @@ export default class extends Phaser.State {
       // Gamepad is connected, can start the game.  
       
       // Test level editor
-      this.state.start('LevelEditor');
-      //this.state.start('Game')
+      //this.state.start('LevelEditor');
+      this.state.start('Game')
 
     } });
 

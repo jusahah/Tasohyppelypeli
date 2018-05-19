@@ -1,4 +1,43 @@
 export default [
+	
+	{
+		name: 'Eka level',
+		map:[
+			"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+			"X                                      X",
+			"X  s                                   X",
+			"X                                      X",
+			"X                                      X",
+			"X                                      X",
+			"X                                      X",
+			"X                                      X",
+			"X                                      X",
+			"X                                      X",
+			"X                                      X",
+			"X                                      X",
+			"X                                      X",
+			"X                                      X",
+			"X                                      X",
+			"X                                      X",
+			"X                                      X",
+			"X                                      X",
+			"X                                      X",
+			"X                                      X",
+			"X                                      X",
+			"X                                      X",
+			"X                                      X",
+			"X                                      X",
+			"X                                      X",
+			"X                                      X",
+			"X                                      X",
+			"X         1      k         2           X",
+			"X                                      X",
+			"XXXXXXXXXXXXXXXXXDXXXXXXXXXXXXXXXXXXXXXX",
+			]
+	},
+
+
+
 	{
 		name: 'Level 1',
 	    // Design the level. x = wall, o = coin, ! = lava.

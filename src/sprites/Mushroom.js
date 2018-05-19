@@ -102,6 +102,9 @@ export default class extends Phaser.Sprite {
 
   respawn() {
 
+    console.warn("RESPAWN " + this.playerNum);
+    console.log(this.spawnPosition);
+
   	this.respawnTimeout = null;
 
 	  this.body.moves = false;
@@ -118,7 +121,7 @@ export default class extends Phaser.Sprite {
   	setTimeout(() => {
   		this.body.moves = true;
   		this.playerAlive = true;
-  	}, 100);
+  	}, 200);
 
 
 

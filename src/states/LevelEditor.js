@@ -101,8 +101,31 @@ export default class extends Phaser.State {
     this.finishButton.inputEnabled = true;
     this.finishButton.events.onInputDown.add(() => {
       console.log("Finish clicked");
+      this.finishLevelCreation();
     }, this);
 
+  }
+
+  finishLevelCreation() {
+
+    var mapString = '[\n';
+
+    _.each(this.map, function(row) {
+      mapString += '"' + row + '",\n';
+      
+    });
+
+    mapString += ']';
+
+    var copypasteElement = document.getElementById('copypastelevel');
+
+    console.log(copypasteElement);
+    copypasteElement.style.display = 'block'
+    copypasteElement.innerHTML = mapString
+
+    var gameArea = document.getElementById('content');
+    console.log(gameArea)
+    gameArea.style.display = 'none';
   }
 
   testLevelMap() {

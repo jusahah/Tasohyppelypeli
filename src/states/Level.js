@@ -371,8 +371,13 @@ export default class extends Phaser.State {
   }
 
   updatePlayer(player, playerControls) {
+
+    if (!player.playerAlive) {
+      return;
+    }
+
     // Check if player arrived to level completion area
-    if (player.body.x > 1168) {
+    if (player.body.x < 10 || player.body.x > 1168 || player.body.y < 10 || player.body.y > 865) {
       player.completeLevel();
       player.kill();
 
@@ -384,16 +389,15 @@ export default class extends Phaser.State {
       return;
     }
 
-    // Ensure player does not fall through walls/ground.
-    if (player.playerAlive) {
-      game.physics.arcade.collide(player, this.walls, wallCollisionOccurred);
-    } 
+
 
     //////////////////////
     ///// player movement ////
     //////////////////////
 
     if (player.playerAlive) {
+      // Ensure player does not fall through walls/ground.
+      game.physics.arcade.collide(player, this.walls, wallCollisionOccurred);
 
       // Move the player 1 when an arrow key is pressed
       if (playerControls.left.isDown) {
@@ -473,6 +477,7 @@ export default class extends Phaser.State {
 
         bullet.kill();
         if (player.playerAlive) {
+          console.log(player.playerNum + ' killed');
           player.youWereKilled();
         }
         
@@ -530,7 +535,8 @@ export default class extends Phaser.State {
 function wallCollisionOccurred(player, wall) {
   // NOTE: Wall can also be door!
 
-  if (ticks % 10 === 0 && wall.hasOwnProperty('th_door')) {
+  // TODO: How to do this properly when door is on ceiling
+  if (ticks % 3 === 0 && wall.hasOwnProperty('th_door')) {
     console.log("Check key against door with player " + player.playerNum);
     var door = wall;
     var keyNeeded = door.th_door;
