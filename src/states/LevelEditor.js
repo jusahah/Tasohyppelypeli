@@ -296,6 +296,10 @@ export default class extends Phaser.State {
       console.log("Create coin")
       var sprite = this.coins.getFirstExists(false);
 
+    } else if (letter === 'm') {
+      console.log("Create coin")
+      var sprite = this.lavas.getFirstExists(false);
+
     } else if (letter === 'k') {
       console.log("Create key")
       var sprite = this.keys.getFirstExists(false);
@@ -314,8 +318,14 @@ export default class extends Phaser.State {
     } 
 
     if (sprite) {
-      // If we have a sprite, set it to the starting position
-      sprite.reset(tile.xIndex*30, tile.yIndex*30);
+      if (letter === 'm') {
+        // Lava is not full tile height
+        sprite.reset(tile.xIndex*30, tile.yIndex*30+10);
+      } else {
+        // If we have a sprite, set it to the starting position
+        sprite.reset(tile.xIndex*30, tile.yIndex*30);
+        
+      }
       // Save to active sprites object
       this.activeSprites[tile.xIndex + ',' + tile.yIndex] = sprite;
 
@@ -441,6 +451,11 @@ export default class extends Phaser.State {
     block.th_letter = 'x';
     this.toolbar.push(block);
 
+    var lava = game.add.sprite(0, 0, 'misc', 64);
+    lava.width = this.iconSize;
+    lava.height = this.iconSize;
+    lava.th_letter = 'm';
+    this.toolbar.push(lava); 
 
     var coin = game.add.sprite(0, 0, 'misc', 18);
     coin.width = this.iconSize;
@@ -495,6 +510,13 @@ export default class extends Phaser.State {
     this.blocks.setAll('frame', 14);
     this.blocks.setAll('width', 30);
     this.blocks.setAll('height', 30);
+
+    // Lavas
+    this.lavas = game.add.group();
+    this.lavas.createMultiple(100, 'misc');
+    this.lavas.setAll('frame', 64);
+    this.lavas.setAll('width', 30);
+    this.lavas.setAll('height', 30-10); 
 
     // Coins
     this.coins = game.add.group();
@@ -551,6 +573,11 @@ export default class extends Phaser.State {
                 xIndex: j,
                 yIndex: i
               }, 'c');
+            } else if (level[i][j] === 'm') {
+              this.createSpriteToTile({
+                xIndex: j,
+                yIndex: i
+              }, 'm');
             } else if (level[i][j] === 's') {
               this.createSpriteToTile({
                 xIndex: j,

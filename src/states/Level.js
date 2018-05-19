@@ -114,6 +114,7 @@ export default class extends Phaser.State {
     this.walls = game.add.group();
     this.coins = game.add.group();
     this.enemies = game.add.group();
+    this.lavas = game.add.group();
 
     this.p1 = new Mushroom({
       game: this.game,
@@ -187,6 +188,14 @@ export default class extends Phaser.State {
                 //console.log(wall);
                 this.walls.add(wall);
                 wall.body.immovable = true; 
+            } else if (level[i][j] === 'm') {
+
+                var lava = game.add.sprite(0+30*j, 0+30*i+10, 'misc', 64);
+                lava.width = 30;
+                lava.height = 20;
+                this.lavas.add(lava);
+                lava.body.immovable = true;               
+
             } else if (level[i][j] === 'c') {
 
                 var coin = game.add.sprite(0+30*j, 0+30*i, 'misc', 18);
@@ -490,6 +499,17 @@ export default class extends Phaser.State {
     game.physics.arcade.collide(this.p1, this.p2);
     // Enemies <-> walls
     game.physics.arcade.collide(this.enemies, this.walls);
+    game.physics.arcade.collide(this.enemies, this.lavas, (enemy, lava) => {
+      enemy.kill();
+    });
+
+    game.physics.arcade.overlap(
+      [this.p1, this.p2], 
+      this.lavas, 
+      playerFellToLava, 
+      null, 
+      this
+    );
 
     game.physics.arcade.overlap(
       [this.p1, this.p2], 
@@ -530,6 +550,13 @@ export default class extends Phaser.State {
   }
 
 
+}
+
+function playerFellToLava(player, lava) {
+  if (player.playerAlive) {
+    console.log("Player killed by lava");
+    player.youWereKilled();
+  }  
 }
 
 function wallCollisionOccurred(player, wall) {

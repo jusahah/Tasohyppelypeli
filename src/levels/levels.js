@@ -32,7 +32,7 @@ export default [
 			"X                                      X",
 			"X         1      k         2           X",
 			"X                                      X",
-			"XXXXXXXXXXXXXXXXXDXXXXXXXXXXXXXXXXXXXXXX",
+			"XXXXXXXXXXXXXXXXXDXXXXXmmXXXXXXXXXXXXXXX",
 			]
 	},
 

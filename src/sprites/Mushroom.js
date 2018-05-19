@@ -110,18 +110,21 @@ export default class extends Phaser.Sprite {
 	  this.body.moves = false;
   	this.x = this.spawnPosition.x;
   	this.y = this.spawnPosition.y;
-
+    this.body.velocity.y = 0;
+    
   	this.rotation = 0;
-  	this.immovable = false;
+  	//this.immovable = false;
   	this.body.collideWorldBounds = true;
   	this.frame = this.getDefaultFrame();
   	
   	// Mark player as alive (re-enables controls)
   	// We need to wait a bit so Phaser gets to recover physics or smth.
   	setTimeout(() => {
+      this.body.velocity.y = 0;
+      this.immovable = false;
   		this.body.moves = true;
   		this.playerAlive = true;
-  	}, 200);
+  	}, 100);
 
 
 
@@ -140,6 +143,7 @@ export default class extends Phaser.Sprite {
   	this.immovable = true;
   	this.body.collideWorldBounds = false;
   	this.body.velocity.x = 0;
+    this.body.velocity.y = 0;
   	this.animations.stop(null, true);
   	this.frame = this.getDefaultFrame();
 
