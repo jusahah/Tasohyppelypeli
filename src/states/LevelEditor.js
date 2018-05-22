@@ -52,8 +52,151 @@ export default class extends Phaser.State {
           'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
     ]; 
 
+
+    this.spriteMap = [];
+
+    // Initialize this.spriteMap to contain only NULLs
+    for (var i = 0; i < this.map.length; i++) {
+        
+        var row = [];
+
+        this.spriteMap.push(row);
+
+        for (var j = 0; j < this.map[i].length; j++) {
+          row.push(null);
+          
+        }
+    }
   }
+
   preload() { 
+
+
+  }
+
+  // this should be called whenever this.map is changed!!!!!
+  matchSpritesToData() {
+
+    var levelMap = this.map;
+    var spriteMap = this.spriteMap;
+
+    for (var i = 0; i < levelMap.length; i++) {
+
+        for (var j = 0; j < levelMap[i].length; j++) {
+
+            var letter = levelMap[i][j];
+            var sprite = spriteMap[i][j];
+
+            if (sprite) {
+
+              if (letter === sprite.th_letter) {
+                // Matching sprite found, nothing to do.
+              } else {
+                // We have sprite, but letter is NOT same as sprite.th_letter!
+
+                if (letter === ' ') {
+                  // If this is special sprite that is singular,
+                  // we do not want to destroy it.
+                  if (sprite.th_letter !== '1' && sprite.th_letter !== '2' && sprite.th_letter !== 'D') {
+                    
+                    // Not a special sprite, can destroy safely.
+                    sprite.kill();
+                    
+                  }
+
+                  spriteMap[i][j] = null; // Set sprite map tile/position to null
+                } else {
+                  if (sprite.th_letter !== '1' && sprite.th_letter !== '2' && sprite.th_letter !== 'D') {
+                    
+                    // Not a special sprite, can destroy safely.
+                    sprite.kill();
+                    
+                  }
+
+                  
+                  var newSprite = this.createOrFindSpriteForLetter(letter);
+                  if (letter === 'm') {
+                    // Lava is not full tile height
+                    newSprite.reset(j*30, i*30+10);
+                  } else {
+                    // If we have a sprite, set it to the starting position
+                    newSprite.reset(j*30, i*30);
+                    
+                  }
+                  spriteMap[i][j] = newSprite;
+                }
+              }
+              
+            } else {
+              if (letter === ' ') {
+                // Nothing to do, no sprite nor letter
+
+              } else {
+
+                var newSprite = this.createOrFindSpriteForLetter(letter);
+                if (letter === 'm') {
+                  // Lava is not full tile height
+                  newSprite.reset(j*30, i*30+10);
+                } else {
+                  // If we have a sprite, set it to the starting position
+                  newSprite.reset(j*30, i*30);
+                  
+                }                
+                spriteMap[i][j] = newSprite;
+
+              }
+            }
+
+          
+        }
+    }
+
+  }
+
+  createOrFindSpriteForLetter(letter) {
+    if (letter === 'x') {
+      console.log("Create block")
+      var sprite = this.blocks.getFirstExists(false);
+
+    } else if (letter === 'c') {
+      console.log("Create coin")
+      var sprite = this.coins.getFirstExists(false);
+
+    } else if (letter === 'm') {
+      console.log("Create coin")
+      var sprite = this.lavas.getFirstExists(false);
+
+    } else if (letter === 'k') {
+      console.log("Create key")
+      var sprite = this.keys.getFirstExists(false);
+
+    } else if (letter === 's') {
+      console.log("Create slime")
+      var sprite = this.slimes.getFirstExists(false);
+
+    } else if (letter === 'b') {
+      console.log("Create beacon")
+      var sprite = this.beacons.getFirstExists(false);
+
+    } else if (letter === 'D') {
+      console.log("Create level door")
+      var sprite = this.levelDoor;
+      sprite.revive();
+    } else if (letter === 'X') {
+      console.log("Create wall")
+      var sprite = this.outerWalls.getFirstExists(false);
+    } else if (letter === '1') {
+      console.log("Return (no create) player 1")
+      var sprite = this.p1;
+    } else if (letter === '2') {
+      console.log("Return (no create) player 2")
+      var sprite = this.p2;
+    } else {
+      throw new Error('Unknown letter - can not create sprite for ' + letter);
+    }
+
+    return sprite;
+
 
 
   }
@@ -140,7 +283,7 @@ export default class extends Phaser.State {
     var row = this.map[tile.yIndex];
     return row.charAt(tile.xIndex);
   }
-
+  /*
   setTileContent(tile, letter) {
 
     console.log("Set tile content: " + letter);
@@ -248,7 +391,8 @@ export default class extends Phaser.State {
     }
 
   }
-
+  */
+  /*
   deleteCurrentLevelDoorIfExists() {
 
     function setCharAt(str,index,chr) {
@@ -262,6 +406,7 @@ export default class extends Phaser.State {
       var row = this.map[this.levelDoorTile.yIndex];
       var updatedRow = setCharAt(row, this.levelDoorTile.xIndex, 'X');
       this.map[this.levelDoorTile.yIndex] = updatedRow; 
+
       // Delete door sprite
       this.deleteSpriteFromTile(this.levelDoorTile);
 
@@ -274,7 +419,9 @@ export default class extends Phaser.State {
     }
 
   }
+  */
 
+  /*
   deleteSpriteFromTile(tile) {
     // Fetch from active sprites object
 
@@ -285,7 +432,9 @@ export default class extends Phaser.State {
       this.activeSprites[tile.xIndex + ',' + tile.yIndex] = null;
     }
   }
+  */
 
+  /*
   createSpriteToTile(tile, letter) {
 
     if (letter === 'x') {
@@ -331,6 +480,7 @@ export default class extends Phaser.State {
 
     }    
   }
+  */
 
   findTileFor(letter) {
     
@@ -394,17 +544,152 @@ export default class extends Phaser.State {
     var content = this.getTileContent(tile);
     console.log(content);
 
-    this.setTileContent(tile, this.selectedIcon);
+    // OLD ALGORITHM
+    //this.setTileContent(tile, this.selectedIcon);
 
+    // NEW ALGORITHM
+    this.editLevelMap(tile, this.selectedIcon);
   }
 
+  deleteCurrentLevelDoorFromLevelMap() {
+
+    function setCharAt(str,index,chr) {
+        if(index > str.length-1) return str;
+        return str.substr(0,index) + chr + str.substr(index+1);
+    }
+
+    var level = this.map;
+
+    for (var i = 0; i < level.length; i++) {
+
+        for (var j = 0; j < level[i].length; j++) {
+
+            if (level[i][j] === 'D') {
+              var letterRow = level[i];
+              // Found level door, delete it by placing 'X' there.
+              var updatedRow = setCharAt(letterRow, j, 'X');
+              level[i] = updatedRow;
+              return;
+                              
+            }            
+        }
+    }       
+  }
+
+  deleteCurrentPlayerFromLevelMap(letter) {
+
+    function setCharAt(str,index,chr) {
+        if(index > str.length-1) return str;
+        return str.substr(0,index) + chr + str.substr(index+1);
+    }
+
+    var level = this.map;
+
+    for (var i = 0; i < level.length; i++) {
+
+        for (var j = 0; j < level[i].length; j++) {
+
+            if (level[i][j] === letter) {
+              var letterRow = level[i];
+              // Found level door, delete it by placing 'X' there.
+              var updatedRow = setCharAt(letterRow, j, ' ');
+              level[i] = updatedRow;
+              return;
+                              
+            }            
+        }
+    }       
+  }
+
+  editLevelMap(tile, letter) {
+
+    // NOTE! We only need to edit level map (= letters)
+    // System then automatically matches sprite map to match level map
+
+    function setCharAt(str,index,chr) {
+        if(index > str.length-1) return str;
+        return str.substr(0,index) + chr + str.substr(index+1);
+    }
+
+    // Edit level map (= map made of letters)
+    var letterRow = this.map[tile.yIndex];
+
+    var currentLetter = this.map[tile.yIndex][tile.xIndex];
+
+    if (currentLetter === 'X' || currentLetter === 'D') {
+      // trying to replace outer wall
+      if (letter !== 'D') {
+        // This is illegal
+        return false;
+
+      }
+    } 
+
+    if (letter === 'D') {
+
+      if (currentLetter !== 'X') {
+        // Not okay
+        // Not possible, can only create to outer wall tile
+        return false;
+
+
+      } else {
+        console.warn("Can place level door");
+        // This is outer wall tile, all okay.
+
+        this.deleteCurrentLevelDoorFromLevelMap();
+        letterRow = this.map[tile.yIndex];
+        var updatedRow = setCharAt(letterRow, tile.xIndex, 'D');
+        this.map[tile.yIndex] = updatedRow;
+        console.log(this.map);
+
+      }
+      
+    } else {
+      // Letter is NOT level door
+
+      if (letter === '1' || letter === '2') {
+        this.deleteCurrentPlayerFromLevelMap(letter);
+        letterRow = this.map[tile.yIndex];
+        var updatedRow = setCharAt(letterRow, tile.xIndex, letter);
+        this.map[tile.yIndex] = updatedRow;
+        console.log(this.map);
+
+        // We are repositioning player
+      } else {
+
+        // Letter is NOT D, 1 or 2.
+        // Simply add new sprite.
+        if (currentLetter === letter) {
+          // We are deleting letter from this.map ( = insert space)
+          var updatedRow = setCharAt(letterRow, tile.xIndex, ' ');
+          
+        } else {
+          var updatedRow = setCharAt(letterRow, tile.xIndex, letter);
+        }
+
+        this.map[tile.yIndex] = updatedRow;
+        
+      }
+
+    }   
+
+
+
+
+    // Automatically match sprites map to level map
+    this.matchSpritesToData();
+  }
+  /*
   placePlayerToTile(player, tileX, tileY) {
     console.log("Place player to " + tileX + ", " + tileY)
     player.x = 2+30*tileX; 
     player.y = 2+30*tileY; 
   }
-
+  */
+  /*
   preparePlayers() {
+
     var level = this.map;
 
     for (var i = 0; i < level.length; i++) {
@@ -412,14 +697,14 @@ export default class extends Phaser.State {
         for (var j = 0; j < level[i].length; j++) {
 
             if (level[i][j] == '1') {
-                this.placePlayerToTile(this.p1, j, i);
+                //this.placePlayerToTile(this.p1, j, i);
                 this.p1.inputEnabled = true;
                 this.p1.events.onInputDown.add(() => {
                   console.log("Player clicked: 1");
                   this.selectedIcon = '1';
                 }, this);                
             } else if (level[i][j] == '2') {
-                this.placePlayerToTile(this.p2, j, i);
+                //this.placePlayerToTile(this.p2, j, i);
                 this.p2.inputEnabled = true;
                 this.p2.events.onInputDown.add(() => {
                   console.log("Player clicked: 2");
@@ -430,6 +715,7 @@ export default class extends Phaser.State {
         }
     }    
   }
+  */
 
   create() {
     console.log("LevelEditor created");
@@ -476,6 +762,12 @@ export default class extends Phaser.State {
     slime.th_letter = 's';
     this.toolbar.push(slime); 
 
+    var beacon = game.add.sprite(0, 0, 'objects', 6);
+    beacon.width = this.iconSize;
+    beacon.height = this.iconSize;
+    beacon.th_letter = 'b';
+    this.toolbar.push(beacon); 
+
     var levelDoor = game.add.sprite(0, 0, 'misc', 25);
     levelDoor.width = this.iconSize;
     levelDoor.height = this.iconSize;
@@ -493,13 +785,27 @@ export default class extends Phaser.State {
     this.p1 = game.add.sprite(0, 0, 'players', 1);
     this.p1.width = 26;
     this.p1.height = 26;   
+    this.p1.th_letter = '1';
+    this.p1.inputEnabled = true;
+    this.p1.events.onInputDown.add(() => {
+      console.log("Player clicked: 1");
+      this.selectedIcon = '1';
+    }, this);
+
     
 
     this.p2 = game.add.sprite(0, 0, 'players', 8*12+7);
     this.p2.width = 26;
     this.p2.height = 26;  
+    this.p2.th_letter = '2';
+    this.p2.inputEnabled = true;
+    this.p2.events.onInputDown.add(() => {
+      console.log("Player clicked: 2");
+      this.selectedIcon = '2';
+    }, this);    
 
-    this.preparePlayers();  
+    //this.preparePlayers();  
+    
     ////////////////////////////////////////////////
     ///////// CREATE SPRITES TO USE IN LEVEL ///////
     ////////////////////////////////////////////////
@@ -510,6 +816,7 @@ export default class extends Phaser.State {
     this.blocks.setAll('frame', 14);
     this.blocks.setAll('width', 30);
     this.blocks.setAll('height', 30);
+    this.blocks.setAll('th_letter', 'x');
 
     // Lavas
     this.lavas = game.add.group();
@@ -517,20 +824,23 @@ export default class extends Phaser.State {
     this.lavas.setAll('frame', 64);
     this.lavas.setAll('width', 30);
     this.lavas.setAll('height', 30-10); 
+    this.lavas.setAll('th_letter', 'm');
 
     // Coins
     this.coins = game.add.group();
     this.coins.createMultiple(100, 'misc');
     this.coins.setAll('frame', 18);
     this.coins.setAll('width', 30);
-    this.coins.setAll('height', 30); 
+    this.coins.setAll('height', 30);
+    this.coins.setAll('th_letter', 'c'); 
 
     // Keys
     this.keys = game.add.group();
     this.keys.createMultiple(100, 'objects');
     this.keys.setAll('frame', 73);
     this.keys.setAll('width', 30);
-    this.keys.setAll('height', 30);    
+    this.keys.setAll('height', 30);
+    this.keys.setAll('th_letter', 'k');    
 
     // Slimes
     this.slimes = game.add.group();
@@ -538,13 +848,31 @@ export default class extends Phaser.State {
     this.slimes.setAll('frame', 60);
     this.slimes.setAll('width', 30);
     this.slimes.setAll('height', 30); 
+    this.slimes.setAll('th_letter', 's');
+
+    // Slimes
+    this.beacons = game.add.group();
+    this.beacons.createMultiple(100, 'objects');
+    this.beacons.setAll('frame', 6);
+    this.beacons.setAll('width', 30);
+    this.beacons.setAll('height', 30); 
+    this.beacons.setAll('th_letter', 'b');
+
+    // Normal doors
+    this.doors = game.add.group();
+    this.doors.createMultiple(1, 'misc');
+    this.doors.setAll('frame', 26);
+    this.doors.setAll('width', 30);
+    this.doors.setAll('height', 30);
+    this.doors.setAll('th_letter', 'd');  
 
     // Level door
-    this.levelDoors = game.add.group();
-    this.levelDoors.createMultiple(1, 'misc');
-    this.levelDoors.setAll('frame', 25);
-    this.levelDoors.setAll('width', 30);
-    this.levelDoors.setAll('height', 30);  
+    this.levelDoor = game.add.sprite(0, 0, 'misc', 25);
+    this.levelDoor.width = 30
+    this.levelDoor.height = 30
+    this.levelDoor.th_letter = 'D';
+    this.levelDoor.th_door = 'golden';
+    this.levelDoor.th_passlevel = true;
 
     ////////////////////////////////////////////////
     ////////// LEVEL TEMPLATE CREATION /////////////
@@ -555,6 +883,11 @@ export default class extends Phaser.State {
     this.outerWalls.setAll('frame', 14);
     this.outerWalls.setAll('width', 30);
     this.outerWalls.setAll('height', 30); 
+    this.outerWalls.setAll('th_letter', 'X');
+
+    this.matchSpritesToData();
+
+    /*
 
     var level = this.map;
 
@@ -607,6 +940,7 @@ export default class extends Phaser.State {
             
         }
     }
+    */
 
     ////////////////////////////////
     ///// WORLD CLICK LISTENER /////
