@@ -16,6 +16,9 @@ export default class extends Phaser.State {
     this.completedLevel = false;
     this.levelMap = level.map;
 
+    // State vars while playing
+    this.lastGravityChange = 0; // Tick number
+
 
   }
   preload() { 
@@ -234,6 +237,15 @@ export default class extends Phaser.State {
                 this.walls.add(levelDoor);
                 levelDoor.body.immovable = true;
 
+
+            } else if (level[i][j] === 'A') {
+
+                var antiGravityButton = game.add.sprite(0+30*j, 0+30*i, 'misc', 135);
+                antiGravityButton.width = 30;
+                antiGravityButton.height = 30;
+                antiGravityButton.th_letter = 'A';
+                this.walls.add(antiGravityButton);
+                antiGravityButton.body.immovable = true;
                              
 
             } else if (level[i][j] === 's') {
@@ -380,11 +392,13 @@ export default class extends Phaser.State {
 
     //this.p1.animations.play('walk_right', 15, true); 
 
-    this.p1.body.gravity.y = 500;
-    this.p2.body.gravity.y = 500;
+    
 
     this.p1.body.collideWorldBounds = true;
     this.p2.body.collideWorldBounds = true;
+
+    this.p1.setGravity();
+    this.p2.setGravity();
 
     // Remember to change here when changing screen dimensions
     // in config.js
@@ -442,14 +456,14 @@ export default class extends Phaser.State {
 
     if (player.playerAlive) {
       // Ensure player does not fall through walls/ground.
-      game.physics.arcade.collide(player, this.walls, wallCollisionOccurred);
+      game.physics.arcade.collide(player, this.walls, wallCollisionOccurred.bind(this));
 
       // Move the player 1 when an arrow key is pressed
-      if (playerControls.left.isDown) {
+      if (playerControls.left.isDown && player.x > 48) {
           player.direction = -1;
           player.animations.play('walk_left', 15, true);
           player.body.velocity.x = -130;
-      } else if (playerControls.right.isDown) {
+      } else if (playerControls.right.isDown && player.x < (1200-47)) {
           player.direction = 1;
           player.animations.play('walk_right', 15, true);
           player.body.velocity.x = 130;
@@ -477,8 +491,14 @@ export default class extends Phaser.State {
       }
 
       // Make the mushroom jump if he is touching the ground
-      if (playerControls.up.isDown && player.body.touching.down) {
-          player.body.velocity.y = -360;
+      if (playerControls.up.isDown) {
+
+          if (player.isInverted() && player.body.touching.up) {
+            player.jumpIfPossible(ticks);
+            ;
+          } else if (player.body.touching.down) {            
+            player.jumpIfPossible(ticks);
+          }
       }
 
       
@@ -597,16 +617,26 @@ function playerFellToLava(player, lava) {
 
 function wallCollisionOccurred(player, wall) {
   // NOTE: Wall can also be door!
-
+  if (ticks % 2 !== 0) {
+    return false;
+  }
   // TODO: How to do this properly when door is on ceiling
-  if (ticks % 3 === 0 && wall.hasOwnProperty('th_door')) {
+  if (wall.hasOwnProperty('th_door')) {
     console.log("Check key against door with player " + player.playerNum);
     var door = wall;
     var keyNeeded = door.th_door;
 
     if (player.useKey(keyNeeded)) {
       door.kill();
-    }
+    } 
+  } else if (wall.th_letter === 'A') {
+      if (ticks - this.lastGravityChange > 60) {
+        this.lastGravityChange = ticks;
+        this.p1.invertGravity();
+        this.p2.invertGravity();
+        
+      }
+      
   }
 }
 

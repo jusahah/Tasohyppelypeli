@@ -39,6 +39,13 @@ export default class extends Phaser.Sprite {
 
     // Timeout handler (allows to destroy timeout before its run)
     this.respawnTimeout = null;
+
+    this.lastJump = 0;
+  }
+
+  setGravity() {
+    this.body.gravity.y = 500;
+    //this.scale.y = 1;
   }
 
   releaseTimeouts() {
@@ -59,6 +66,28 @@ export default class extends Phaser.Sprite {
 
   update () {
     //this.angle += 1
+  }
+
+  jumpIfPossible(ticks) {
+
+    if (ticks - this.lastJump < 20) {
+      return;
+    }
+
+    this.lastJump = ticks;
+
+    if (this.body.gravity.y < 0) {
+      this.body.velocity.y = 360;
+      
+    } else {
+      this.body.velocity.y = -360;
+
+    }
+
+  }
+
+  isInverted() {
+    return this.body.gravity.y < 0;
   }
 
   setDefaultFrame(frameNum) {
@@ -116,6 +145,11 @@ export default class extends Phaser.Sprite {
   	//this.immovable = false;
   	this.body.collideWorldBounds = true;
   	this.frame = this.getDefaultFrame();
+
+    if (this.body.gravity.y < 0) {
+      this.invertGravity();
+    }
+
   	
   	// Mark player as alive (re-enables controls)
   	// We need to wait a bit so Phaser gets to recover physics or smth.
@@ -161,6 +195,12 @@ export default class extends Phaser.Sprite {
 
   shotFired() {
   	this.lastShotTime = Date.now();
+  }
+
+  invertGravity(){
+    this.body.gravity.y *= -1;
+
+    this.scale.y *= -1;
   }
 
 

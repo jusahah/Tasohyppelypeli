@@ -97,7 +97,7 @@ export default class extends Phaser.State {
                 if (letter === ' ') {
                   // If this is special sprite that is singular,
                   // we do not want to destroy it.
-                  if (sprite.th_letter !== '1' && sprite.th_letter !== '2' && sprite.th_letter !== 'D') {
+                  if (sprite.th_letter !== '1' && sprite.th_letter !== '2' && sprite.th_letter !== 'D' && sprite.th_letter !== 'A') {
                     
                     // Not a special sprite, can destroy safely.
                     sprite.kill();
@@ -191,6 +191,9 @@ export default class extends Phaser.State {
     } else if (letter === '2') {
       console.log("Return (no create) player 2")
       var sprite = this.p2;
+    } else if (letter === 'A') {
+      var sprite = this.antiGravityButton;
+      sprite.revive();  
     } else {
       throw new Error('Unknown letter - can not create sprite for ' + letter);
     }
@@ -576,6 +579,30 @@ export default class extends Phaser.State {
     }       
   }
 
+  deleteCurrentAntiGravityButtonFromLevelMap() {
+
+    function setCharAt(str,index,chr) {
+        if(index > str.length-1) return str;
+        return str.substr(0,index) + chr + str.substr(index+1);
+    }
+
+    var level = this.map;
+
+    for (var i = 0; i < level.length; i++) {
+
+        for (var j = 0; j < level[i].length; j++) {
+
+            if (level[i][j] === 'A') {
+              var letterRow = level[i];
+              var updatedRow = setCharAt(letterRow, j, ' ');
+              level[i] = updatedRow;
+              return;
+                              
+            }            
+        }
+    }       
+  }
+
   deleteCurrentPlayerFromLevelMap(letter) {
 
     function setCharAt(str,index,chr) {
@@ -645,6 +672,18 @@ export default class extends Phaser.State {
 
       }
       
+    } else if (letter === 'A') {
+        console.warn("Can place anti gravity button");
+        // This is outer wall tile, all okay.
+
+        this.deleteCurrentAntiGravityButtonFromLevelMap();
+        letterRow = this.map[tile.yIndex];
+        var updatedRow = setCharAt(letterRow, tile.xIndex, 'A');
+        this.map[tile.yIndex] = updatedRow;
+        console.log(this.map);
+
+      
+    
     } else {
       // Letter is NOT level door
 
@@ -775,6 +814,12 @@ export default class extends Phaser.State {
     levelDoor.th_door = 'golden';
     levelDoor.th_passlevel = true;
     this.toolbar.push(levelDoor);     
+
+    var antiGravityButton = game.add.sprite(0, 0, 'misc', 135);
+    antiGravityButton.width = this.iconSize;
+    antiGravityButton.height = this.iconSize;
+    antiGravityButton.th_letter = 'A';
+    this.toolbar.push(antiGravityButton); 
     // More icons here
 
     this.renderToolbar();
@@ -873,6 +918,12 @@ export default class extends Phaser.State {
     this.levelDoor.th_letter = 'D';
     this.levelDoor.th_door = 'golden';
     this.levelDoor.th_passlevel = true;
+
+    // Anti-gravity button
+    this.antiGravityButton = game.add.sprite(0, 0, 'misc', 135);
+    this.antiGravityButton.width = 30
+    this.antiGravityButton.height = 30
+    this.antiGravityButton.th_letter = 'A';
 
     ////////////////////////////////////////////////
     ////////// LEVEL TEMPLATE CREATION /////////////
