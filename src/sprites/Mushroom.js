@@ -10,6 +10,14 @@ export default class extends Phaser.Sprite {
   		+ x + ", " + y
   	);
 
+    // Health
+    this.livesLeft = 3;
+    this.originalHealth = 4;
+    this.healthLeft = this.originalHealth;
+
+    // Points
+    this.points = 0;
+
     // Records original x and y values for respawning player
     this.spawnPosition = {
     	x: x,
@@ -41,6 +49,35 @@ export default class extends Phaser.Sprite {
     this.respawnTimeout = null;
 
     this.lastJump = 0;
+
+  }
+
+  getPoints() {
+    return this.points;
+  }
+
+  addPoint() {
+    this.points++;
+  }
+
+  resetPoints() {
+    this.points = 0;
+  }
+
+  getHealth() {
+    return this.healthLeft;
+  }
+
+  loseHealth() {
+    this.healthLeft--;
+  }
+
+  resetHealth() {
+    this.healthLeft = this.originalHealth;
+  }
+
+  getLives() {
+    return this.livesLeft;
   }
 
   setGravity() {
@@ -150,14 +187,15 @@ export default class extends Phaser.Sprite {
       this.invertGravity();
     }
 
-  	
-  	// Mark player as alive (re-enables controls)
-  	// We need to wait a bit so Phaser gets to recover physics or smth.
-  	setTimeout(() => {
+    this.resetHealth();
+    
+    // Mark player as alive (re-enables controls)
+    // We need to wait a bit so Phaser gets to recover physics or smth.
+    setTimeout(() => {
       this.body.velocity.y = 0;
       this.immovable = false;
-  		this.body.moves = true;
-  		this.playerAlive = true;
+      this.body.moves = true;
+      this.playerAlive = true;
   	}, 100);
 
 
@@ -166,6 +204,7 @@ export default class extends Phaser.Sprite {
   }
 
   youWereKilled() {
+    this.healthLeft = 0;
   	this.playerAlive = false;
 
   	this.playDeathAnimation();
@@ -181,7 +220,7 @@ export default class extends Phaser.Sprite {
   	this.animations.stop(null, true);
   	this.frame = this.getDefaultFrame();
 
-  	this.respawnTimeout = setTimeout(this.respawn.bind(this), 3000);
+
 
   }
 

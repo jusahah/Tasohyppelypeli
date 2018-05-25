@@ -88,7 +88,6 @@ export default class extends Phaser.Sprite {
       // Check if laser ray endpoint is close enough to player
 
       if (x > player.body.x-20 && x < (player.body.x + 20)) {
-        console.log("Possible to see p")
         // Laser ray is in players body height
         
         // Calc distance to player

@@ -56,8 +56,37 @@ export default class extends Phaser.State {
       // Gamepad is connected, can start the game.  
       
       // Test level editor
-      this.state.start('LevelEditor');
+      //this.state.start('LevelEditor');
       //this.state.start('Game')
+
+      this.editorButton = this.add.text(this.world.centerX, this.game.height / 2 - 170, 'Editor ', {
+        font: '70px Bangers',
+        fill: '#77BFA3',
+        smoothed: false
+      })
+
+      this.editorButton.anchor.x = 0.5;
+
+      this.editorButton.inputEnabled = true;
+      this.editorButton.events.onInputDown.add(() => {
+        console.log("Editor button clicked");
+        this.state.start('LevelEditor')
+      }, this);    
+
+
+      this.gameButton = this.add.text(this.world.centerX, this.game.height / 2 + 50, 'Start Game ', {
+        font: '70px Bangers',
+        fill: '#77BFA3',
+        smoothed: false
+      })
+
+      this.gameButton.anchor.x = 0.5;
+
+      this.gameButton.inputEnabled = true;
+      this.gameButton.events.onInputDown.add(() => {
+        console.log("Game button clicked");
+        this.state.start('Game')
+      }, this);      
 
     } });
 

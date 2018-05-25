@@ -8,6 +8,8 @@ import _ from 'lodash'
 
 var ticks = 0;
 
+var respawnTimeouts = {};
+
 export default class extends Phaser.State {
   init(level, returnToLevelEditor) {
 
@@ -19,9 +21,102 @@ export default class extends Phaser.State {
     // State vars while playing
     this.lastGravityChange = 0; // Tick number
 
+    this.infoBars = {}; // Contains all sprites that live in info bar
 
   }
   preload() { 
+
+
+  }
+
+  createPlayerInfoBars() {
+
+    function createInfoBar(player, xStart, direction) {
+
+      // Health stuff 
+      var healthSprites = [];
+
+      var healthAmount = player.getHealth();
+
+      _.times(healthAmount, (n) => {
+        var healthSprite = game.add.sprite(n*24*direction+xStart, game.height - 50, 'misc', 66);
+        healthSprite.width = 20;
+        healthSprite.height = 20;
+        healthSprite.anchor.setTo(0.5)
+
+        healthSprites.push(healthSprite);
+      });
+
+      // Coin & points stuff
+
+      var coinSprite = game.add.sprite(120*direction+xStart, game.height - 40, 'misc', 18);
+      coinSprite.width = 40;
+      coinSprite.height = 40;   
+      coinSprite.anchor.setTo(0.5); 
+
+      if (direction === 1) {
+        var pointsText = ' x 0 ';
+        // THIS IS GREAT! Remember to use anchoring elsewhere too!
+        var xAnchor = 0;
+      } else {
+        var pointsText = ' 0 x ';
+        var xAnchor = 1;
+      }
+
+      var pointSprite = game.add.text(146*direction+xStart, game.height - 70, pointsText, {
+        font: '40px Bangers',
+        fill: '#77BFA3',
+        smoothed: false
+      })
+
+      pointSprite.anchor.x = xAnchor;
+
+      return {
+        health: healthSprites,
+        points: {
+          coin: coinSprite,
+          text: pointSprite
+        }
+      };
+ 
+    }
+
+
+
+    this.infoBars[1] = createInfoBar(this.p1, 30, 1);
+    this.infoBars[2] = createInfoBar(this.p2, game.width - 30, -1);
+
+  }
+
+  updatePlayerPointsInfo(player) {
+    var pointsText = this.infoBars[player.playerNum].points.text;
+
+    var points = player.getPoints();
+
+    if (player.playerNum === 1) {
+      pointsText.setText(' x ' + points + ' ');
+      
+    } else {
+      pointsText.setText(' ' + points + ' x ');
+    }
+  }
+
+  updatePlayerHealth(player) {
+
+    // playerCode is 'p1' or 'p2'
+
+    var healthSprites = this.infoBars[player.playerNum].health;
+    var currentHealth = player.getHealth();
+
+    _.each(healthSprites, (sprite) => {
+      currentHealth--;
+
+      if (currentHealth >= 0) {
+        sprite.visible = true;
+      } else {
+        sprite.visible = false;
+      }
+    });
 
 
   }
@@ -105,12 +200,13 @@ export default class extends Phaser.State {
     // Add the physics engine to all game objects (body is added)
     game.world.enableBody = true;
 
-    const bannerText = 'Tasohyppelypeli'
-    let banner = this.add.text(this.world.centerX, this.game.height - 80, bannerText, {
+    const bannerText = 'Tasohyppelypeli '
+    let banner = this.add.text(this.world.centerX, this.game.height - 60, bannerText, {
       font: '40px Bangers',
       fill: '#77BFA3',
       smoothed: false
     })
+
 
     //this.bg = game.add.group();
     this.keys = game.add.group();
@@ -135,6 +231,9 @@ export default class extends Phaser.State {
       y: 850,
       asset: 'players'
     })
+
+    // Create info bars for players (must be done after player creation!)
+    this.createPlayerInfoBars();
 
     ////////////////////////////////////////
     // Bullets group
@@ -340,8 +439,6 @@ export default class extends Phaser.State {
       wallsGroup: this.walls
     })
 
-    console.log(this.p1);
-
 
     this.game.add.existing(this.p1)
     this.game.add.existing(this.p2)
@@ -429,6 +526,23 @@ export default class extends Phaser.State {
 
   }
 
+  tileBelow(player) {
+
+    var tileX = Math.floor((player.x+1) / 30);
+    var tileY = Math.floor(player.y / 30);
+
+
+    var map = this.levelMap;
+
+    if (player.isInverted()) {
+      var letter = map[tileY-1][tileX];
+    } else {
+      var letter = map[tileY+1][tileX];
+    }
+
+    return letter !== ' ';
+  }
+
   updatePlayer(player, playerControls) {
 
     if (!player.playerAlive) {
@@ -459,11 +573,11 @@ export default class extends Phaser.State {
       game.physics.arcade.collide(player, this.walls, wallCollisionOccurred.bind(this));
 
       // Move the player 1 when an arrow key is pressed
-      if (playerControls.left.isDown && player.x > 48) {
+      if (playerControls.left.isDown) {
           player.direction = -1;
           player.animations.play('walk_left', 15, true);
           player.body.velocity.x = -130;
-      } else if (playerControls.right.isDown && player.x < (1200-47)) {
+      } else if (playerControls.right.isDown) {
           player.direction = 1;
           player.animations.play('walk_right', 15, true);
           player.body.velocity.x = 130;
@@ -494,10 +608,23 @@ export default class extends Phaser.State {
       if (playerControls.up.isDown) {
 
           if (player.isInverted() && player.body.touching.up) {
-            player.jumpIfPossible(ticks);
-            ;
+            if (player.x < 48 || player.x > (1200-47)) {
+              if (this.tileBelow(player)) {
+                player.jumpIfPossible(ticks);
+                
+              }
+            } else {
+              player.jumpIfPossible(ticks);
+            }
           } else if (player.body.touching.down) {            
-            player.jumpIfPossible(ticks);
+            if (player.x < 48 || player.x > (1200-47)) {
+              if (this.tileBelow(player)) {
+                player.jumpIfPossible(ticks);
+                
+              }
+            } else {
+              player.jumpIfPossible(ticks);
+            }
           }
       }
 
@@ -538,15 +665,7 @@ export default class extends Phaser.State {
     game.physics.arcade.overlap(
       [this.p1, this.p2], 
       this.bullets, 
-      (player, bullet) => {
-
-        bullet.kill();
-        if (player.playerAlive) {
-          console.log(player.playerNum + ' killed');
-          player.youWereKilled();
-        }
-        
-      }, 
+      playerWasShot.bind(this), 
       null, 
       this
     );
@@ -562,7 +681,7 @@ export default class extends Phaser.State {
     game.physics.arcade.overlap(
       [this.p1, this.p2], 
       this.lavas, 
-      playerFellToLava, 
+      playerFellToLava.bind(this), 
       null, 
       this
     );
@@ -570,7 +689,7 @@ export default class extends Phaser.State {
     game.physics.arcade.overlap(
       [this.p1, this.p2], 
       this.coins, 
-      coinWasCollected, 
+      coinWasCollected.bind(this), 
       null, 
       this
     );
@@ -578,7 +697,7 @@ export default class extends Phaser.State {
     game.physics.arcade.overlap(
       [this.p1, this.p2], 
       this.keys, 
-      keyWasCollected, 
+      keyWasCollected.bind(this), 
       null, 
       this
     );
@@ -587,7 +706,7 @@ export default class extends Phaser.State {
     game.physics.arcade.overlap(
       [this.p1, this.p2], 
       this.enemies, 
-      playerTouchedEnemy, 
+      playerTouchedEnemy.bind(this), 
       null, 
       this
     );
@@ -603,15 +722,45 @@ export default class extends Phaser.State {
     // Release timeout handlers that are still waiting their turn!
     this.p1.releaseTimeouts();
     this.p2.releaseTimeouts();
+
+    // Release local timeouts regarding players 
+    if (respawnTimeouts[1]) {
+      clearTimeout(respawnTimeouts[1]);
+    }
+
+    if (respawnTimeouts[2]) {
+      clearTimeout(respawnTimeouts[2]);
+    }
+
+    respawnTimeouts = {};
   }
 
 
+}
+
+function playerWasShot(player, bullet) {
+
+  bullet.kill();
+  if (player.playerAlive) {
+
+    // Substract one health from player
+    player.loseHealth();
+    this.updatePlayerHealth(player);
+
+    if (player.getHealth() <= 0) {
+      player.youWereKilled();
+      scheduleRespawnForPlayer.call(this, player);
+    }
+  }
+  
 }
 
 function playerFellToLava(player, lava) {
   if (player.playerAlive) {
     console.log("Player killed by lava");
     player.youWereKilled();
+    this.updatePlayerHealth(player);
+    scheduleRespawnForPlayer.call(this, player);
   }  
 }
 
@@ -622,7 +771,6 @@ function wallCollisionOccurred(player, wall) {
   }
   // TODO: How to do this properly when door is on ceiling
   if (wall.hasOwnProperty('th_door')) {
-    console.log("Check key against door with player " + player.playerNum);
     var door = wall;
     var keyNeeded = door.th_door;
 
@@ -643,6 +791,8 @@ function wallCollisionOccurred(player, wall) {
 function coinWasCollected(player, coin) {
 
   if (player.playerAlive) {
+    player.addPoint();
+    this.updatePlayerPointsInfo(player);
     coin.kill();
   }
 
@@ -661,10 +811,18 @@ function keyWasCollected(player, key) {
 }
 
 function playerTouchedEnemy(player, enemy) {
-  console.log("Player " + player.playerNum);
 
   if (player.playerAlive) {
     player.youWereKilled();
+    this.updatePlayerHealth(player);
+    scheduleRespawnForPlayer.call(this, player);
   }
   //enemy.kill();
+}
+
+function scheduleRespawnForPlayer(player) {
+  respawnTimeouts[player.playerNum] = setTimeout(() => {
+    player.respawn();
+    this.updatePlayerHealth(player);
+  }, 3000);
 }
