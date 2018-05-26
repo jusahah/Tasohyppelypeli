@@ -10,8 +10,24 @@ var ticks = 0;
 
 var respawnTimeouts = {};
 
+var oldPlayerControlSelections = null;
+
 export default class extends Phaser.State {
-  init(level, returnToLevelEditor) {
+  init(level, returnToLevelEditor, playerControlSelections) {
+
+    if (!playerControlSelections && !oldPlayerControlSelections) {
+      throw new Error('Level has no stashed control selections nor provided one');
+    }
+
+    this.playerControlSelections = playerControlSelections || oldPlayerControlSelections;
+
+    if (playerControlSelections) {
+      // Stash this to module scope so that its not reset when state ends.
+
+      // This should only be set once (when Game is launched)
+      oldPlayerControlSelections = playerControlSelections;
+      
+    }
 
     this.returnToLevelEditor = !!returnToLevelEditor;
 
@@ -121,11 +137,82 @@ export default class extends Phaser.State {
 
   }
 
+  initPlayerControlsForTheLevel() {
+
+    // To listen to buttons from a specific pad listen directly on that pad game.input.gamepad.padX, where X = pad 1-4
+    this.pad1 = game.input.gamepad.pad1;
+    this.pad2 = game.input.gamepad.pad2;
+    console.warn("Initing player controls based on knowledge:")
+    console.warn(this.playerControlSelections);
+
+    //// PLAYER 1 Controls ///////
+
+    if (this.playerControlSelections.p1 === 'pad1') {
+      this.p1Controls = {
+        up: this.pad1.getButton(Phaser.Gamepad.XBOX360_A),
+        down: this.pad1.getButton(Phaser.Gamepad.XBOX360_LEFT_BUMPER),
+        left: this.pad1.getButton(Phaser.Gamepad.XBOX360_DPAD_LEFT),
+        right: this.pad1.getButton(Phaser.Gamepad.XBOX360_DPAD_RIGHT),
+      };      
+    } else if (this.playerControlSelections.p1 === 'pad2') {
+      this.p1Controls = {
+        up: this.pad2.getButton(Phaser.Gamepad.XBOX360_A),
+        down: this.pad2.getButton(Phaser.Gamepad.XBOX360_LEFT_BUMPER),
+        left: this.pad2.getButton(Phaser.Gamepad.XBOX360_DPAD_LEFT),
+        right: this.pad2.getButton(Phaser.Gamepad.XBOX360_DPAD_RIGHT),
+      };      
+    } else if (this.playerControlSelections.p1 === 'arrows') {
+      // p1 keys
+      this.p1Controls = game.input.keyboard.createCursorKeys();
+      this.p1Controls.down = game.input.keyboard.addKey(Phaser.Keyboard.P);        
+    } else if (this.playerControlSelections.p1 === 'wasd') {
+      // p1 keys
+      this.p1Controls = {
+        up: game.input.keyboard.addKey(Phaser.Keyboard.W),
+        down: game.input.keyboard.addKey(Phaser.Keyboard.T),
+        left: game.input.keyboard.addKey(Phaser.Keyboard.A),
+        right: game.input.keyboard.addKey(Phaser.Keyboard.D),
+      };        
+    }
+
+    //// PLAYER 2 Controls ///////
+
+    if (this.playerControlSelections.p2 === 'pad1') {
+      this.p2Controls = {
+        up: this.pad1.getButton(Phaser.Gamepad.XBOX360_A),
+        down: this.pad1.getButton(Phaser.Gamepad.XBOX360_LEFT_BUMPER),
+        left: this.pad1.getButton(Phaser.Gamepad.XBOX360_DPAD_LEFT),
+        right: this.pad1.getButton(Phaser.Gamepad.XBOX360_DPAD_RIGHT),
+      };      
+    } else if (this.playerControlSelections.p2 === 'pad2') {
+      this.p2Controls = {
+        up: this.pad2.getButton(Phaser.Gamepad.XBOX360_A),
+        down: this.pad2.getButton(Phaser.Gamepad.XBOX360_LEFT_BUMPER),
+        left: this.pad2.getButton(Phaser.Gamepad.XBOX360_DPAD_LEFT),
+        right: this.pad2.getButton(Phaser.Gamepad.XBOX360_DPAD_RIGHT),
+      };      
+    } else if (this.playerControlSelections.p2 === 'arrows') {
+      // p1 keys
+      this.p2Controls = game.input.keyboard.createCursorKeys();
+      this.p2Controls.down = game.input.keyboard.addKey(Phaser.Keyboard.P);        
+    } else if (this.playerControlSelections.p2 === 'wasd') {
+      // p1 keys
+      this.p2Controls = {
+        up: game.input.keyboard.addKey(Phaser.Keyboard.W),
+        down: game.input.keyboard.addKey(Phaser.Keyboard.T),
+        left: game.input.keyboard.addKey(Phaser.Keyboard.A),
+        right: game.input.keyboard.addKey(Phaser.Keyboard.D),
+      };        
+    }
+
+  
+  }
+
   create() {
 
     if (this.returnToLevelEditor) {
       // Add button that exits testing the level and goes back to editor.
-      this.backToEditorButton = this.add.text(960, 910, 'Back to editor ', {
+      this.backToEditorButton = this.add.text(460, 910, 'Back to editor ', {
         font: '40px Bangers',
         fill: '#77BFA3',
         smoothed: false
@@ -140,57 +227,7 @@ export default class extends Phaser.State {
 
     console.log("Level created");
 
-
-    // To listen to buttons from a specific pad listen directly on that pad game.input.gamepad.padX, where X = pad 1-4
-    this.pad1 = game.input.gamepad.pad1;
-
-
-    console.log(this.pad1);
-    console.log("UP BUTTON")
-    console.log(this.pad1.getButton(Phaser.Gamepad.XBOX360_DPAD_UP));
-
-    this.p2Controls = {
-      /*
-      up: game.input.keyboard.addKey(Phaser.Keyboard.W),
-      down: game.input.keyboard.addKey(Phaser.Keyboard.S),
-      left: game.input.keyboard.addKey(Phaser.Keyboard.A),
-      right: game.input.keyboard.addKey(Phaser.Keyboard.D),
-      */
-      up: this.pad1.getButton(Phaser.Gamepad.XBOX360_A),
-      down: this.pad1.getButton(Phaser.Gamepad.XBOX360_LEFT_BUMPER),
-      left: this.pad1.getButton(Phaser.Gamepad.XBOX360_DPAD_LEFT),
-      right: this.pad1.getButton(Phaser.Gamepad.XBOX360_DPAD_RIGHT),
-    };
-
-    /*
-    this.pad1.addCallbacks(this, { onConnect: () => {
-      
-      console.warn("PAD CONNECTED");
-      console.log("Up button")
-      console.log(this.pad1.getButton(Phaser.Gamepad.XBOX360_DPAD_UP));
-
-      // p2 keys
-      this.p2Controls = {
-        
-        up: game.input.keyboard.addKey(Phaser.Keyboard.W),
-        down: game.input.keyboard.addKey(Phaser.Keyboard.S),
-        left: game.input.keyboard.addKey(Phaser.Keyboard.A),
-        right: game.input.keyboard.addKey(Phaser.Keyboard.D),
-        
-        up: this.pad1.getButton(Phaser.Gamepad.XBOX360_DPAD_UP),
-        down: this.pad1.getButton(Phaser.Gamepad.XBOX360_DPAD_DOWN),
-        left: this.pad1.getButton(Phaser.Gamepad.XBOX360_DPAD_LEFT),
-        right: this.pad1.getButton(Phaser.Gamepad.XBOX360_DPAD_RIGHT),
-      };
-      
-    } });
-    */
-
-    // Cursors & movement control
-
-    // p1 keys
-    this.p1Controls = game.input.keyboard.createCursorKeys();
-    this.p1Controls.down = game.input.keyboard.addKey(Phaser.Keyboard.P);
+    this.initPlayerControlsForTheLevel();
 
 
 
@@ -200,12 +237,18 @@ export default class extends Phaser.State {
     // Add the physics engine to all game objects (body is added)
     game.world.enableBody = true;
 
-    const bannerText = 'Tasohyppelypeli '
-    let banner = this.add.text(this.world.centerX, this.game.height - 60, bannerText, {
-      font: '40px Bangers',
-      fill: '#77BFA3',
-      smoothed: false
-    })
+    if (!this.returnToLevelEditor) {
+      const bannerText = 'Tasohyppelypeli '
+      let banner = this.add.text(this.world.centerX, this.game.height - 60, bannerText, {
+        font: '40px Bangers',
+        fill: '#77BFA3',
+        smoothed: false
+      })
+
+      banner.padding.set(10, 16)
+      banner.anchor.setTo(0.5)
+      
+    }
 
 
     //this.bg = game.add.group();
@@ -273,9 +316,6 @@ export default class extends Phaser.State {
     //this.bullets.setAll('checkWorldBounds', true);
 
     ////////////////////////////////////////
-
-    banner.padding.set(10, 16)
-    banner.anchor.setTo(0.5)
 
     var level = this.levelMap;
 

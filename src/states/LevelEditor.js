@@ -8,12 +8,14 @@ import _ from 'lodash'
 var ticks = 0;
 
 export default class extends Phaser.State {
-  init(levelMap) {
+  init(levelMap, playerControlSelections) {
     console.log("LevelEditor init");
     console.log(levelMap);
     // Contains sprite objects that are active (in use)
     // under string key 'x,y'
     this.activeSprites = {};
+
+    this.playerControlSelections = playerControlSelections;
 
     this.levelDoorTile = null;
 
@@ -279,7 +281,7 @@ export default class extends Phaser.State {
     this.state.start('Level', true, false, {
       name: 'Test',
       map: _.clone(this.map)
-    }, true);
+    }, true, this.playerControlSelections);
   }
 
   getTileContent(tile) {
